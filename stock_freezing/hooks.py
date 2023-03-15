@@ -29,7 +29,16 @@ app_license = "MIT"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {
+	"Sales Order": "public/js/sales_order.js",
+	"Purchase Receipt": "public/js/purchase_receipt.js",
+	# "Stock Settings": "public/js/stock_settings.js",
+	"Delivery Note": "public/js/delivery_note.js",
+	"Purchase Order": "public/js/purchase_order.js",
+	"Purchase Invoice": "public/js/purchase_invoice.js",
+	"Sales Invoice": "public/js/sales_invoice.js",
+	"Stock Entry": "public/js/stock_entry.js"
+}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -102,13 +111,21 @@ app_license = "MIT"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-#	"*": {
-#		"on_update": "method",
-#		"on_cancel": "method",
-#		"on_trash": "method"
-#	}
-# }
+doc_events = {
+	"Delivery Note": {
+		"validate":"stock_freezing.events.delivery_note.validate"
+	},
+	"Sales Order": {
+		"validate":"stock_freezing.events.sales_order.validate"
+	}
+	# "Purcahse Receipt":{
+	#   "validate":"stock_freezing.events.purchase_receipt.validate"
+
+	# }
+	# "Item": {
+	# 	"validate": "avientek.events.item.validate_brand_pn"
+	# }
+}
 
 # Scheduled Tasks
 # ---------------
@@ -185,3 +202,28 @@ app_license = "MIT"
 # auth_hooks = [
 #	"stock_freezing.auth.validate"
 # ]
+fixtures = [
+    {
+        "dt": "Custom Field",
+        "filters": [
+            ["name", "in",
+      [
+        #Sales Order
+        'Sales Order-is_frozen',
+        'Stock Entry-sales_order',
+        'Sales Order Item-reserved_quantity',
+        'Purchase Receipt-is_frozen',
+        'Stock Entry-purchase_receipt',
+        'Stock Entry-column_break_abtpd',
+        'Delivery Note Item-actual_quantity',
+        'Sales Order Item-actual_quantity',
+        'Purchase Receipt Item-sales_order_item',
+        'Purchase Receipt Item-sales_order',
+        'Delivery Note Item-reserved_quantity'
+]
+      ]]
+    },
+    {"dt":"Property Setter",
+        "filters": [["doc_type", "in", ("Purchase Order Item")]]
+      }
+			]
