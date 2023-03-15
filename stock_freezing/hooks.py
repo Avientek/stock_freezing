@@ -219,7 +219,8 @@ fixtures = [
         'Sales Order Item-actual_quantity',
         'Purchase Receipt Item-sales_order_item',
         'Purchase Receipt Item-sales_order',
-        'Delivery Note Item-reserved_quantity'
+        'Delivery Note Item-reserved_quantity',
+				'Stock Settings-default_reservation_warehouse'
 ]
       ]]
     },
