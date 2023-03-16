@@ -62,16 +62,21 @@ frappe.ui.form.on('Sales Order', {
 									reqd: true,
 									in_list_view: true,
 									columns:2,
-									onchange: () => {
-											$.each(frm.doc.items, function (k, item){
-												d.fields_dict.items.df.data.some(items => {
-													d.fields_dict.items.grid.refresh();
-													if(items.quantity > (item.qty-item.reserved_quantity)){
-														frappe.throw("Entered Quantity should not be greater than Stock Quantity")
-													}
-											})
-										});
-									}
+									// onchange: () => {
+									// 		$.each(frm.doc.items, function (k, item){
+									// 			// console.log(item.qty)
+									// 			d.fields_dict.items.df.data.some(items => {
+									// 				d.fields_dict.items.grid.refresh();
+									// 				console.log(item.reserved_quantity)
+									// 				// if(item.reserved_quantity){
+									// 				// 	console.log(items.quantity)
+									// 				// 	if(items.quantity > (item.qty-item.reserved_quantity)){
+									// 				// 		frappe.throw("Entered Quantity should not be greater than Stock Quantity")
+									// 				// }
+									// 			// }
+									// 		})
+									// 	});
+									// }
 								},
 								{
 									label: 'Warehouse',
@@ -208,7 +213,6 @@ frappe.ui.form.on('Sales Order', {
 										fieldtype: 'Link',
 										reqd: true,
 										read_only:1,
-										length: 2,
 										in_list_view: true
 									},
 									{
