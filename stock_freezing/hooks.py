@@ -204,7 +204,7 @@ doc_events = {
 # ]
 fixtures = [
     {
-        "dt": "Custom Field",
+        " ": "Custom Field",
         "filters": [
             ["name", "in",
       [
@@ -227,5 +227,8 @@ fixtures = [
     },
     {"dt":"Property Setter",
         "filters": [["doc_type", "in", ("Purchase Order Item")]]
-      }
+      },
+    {"dt":"Stock Entry Type",
+      "filters": [["name", "in", ["Freeze", "Unfreeze"]]]
+    }
 			]

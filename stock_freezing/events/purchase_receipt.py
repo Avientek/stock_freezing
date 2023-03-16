@@ -32,8 +32,8 @@ def get_purchase_stock_entry(freeze,dialog_items):
 		"t_warehouse":reserved_warehouse,
 		"allow_zero_valuation_rate":1,
 		})
-	# stock.insert()
-	# stock.submit()
+	stock.insert()
+	stock.submit()
 	for item in item_details:
 		reserved_qty = frappe.db.get_value('Sales Order Item', item.get('child_name'), 'reserved_quantity')
 		set_qty = reserved_qty + float(item.get('quantity'))

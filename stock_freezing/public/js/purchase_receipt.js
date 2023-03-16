@@ -54,6 +54,7 @@ frappe.ui.form.on('Purchase Receipt', {
 									fieldtype: 'Link',
 									reqd: true,
 									read_only:1,
+									columns:2,
 									in_list_view: true,
 								},
 								{
@@ -61,6 +62,7 @@ frappe.ui.form.on('Purchase Receipt', {
 									fieldname: 'quantity',
 									fieldtype: 'Data',
 									reqd: true,
+									columns:2,
 									in_list_view: true,
 									onchange: () => {
 										// $.each(frm.doc.items, function (k, item){
@@ -73,14 +75,14 @@ frappe.ui.form.on('Purchase Receipt', {
 									});
 								}
 								},
-								{
-									label: 'Warehouse',
-									fieldname: 'warehouse',
-									fieldtype: 'Link',
-									reqd: true,
-									columns:3,
-									options:'Warehouse',
-									in_list_view: true,
+								// {
+								// 	label: 'Warehouse',
+								// 	fieldname: 'warehouse',
+								// 	fieldtype: 'Link',
+								// 	reqd: true,
+								// 	columns:3,
+								// 	options:'Warehouse',
+								// 	in_list_view: true,
 									// onchange: () => {
 									// 	// d.fields_dict.items.df.data.some(items => {
 									// 	// 	d.fields_dict.items.grid.refresh();
@@ -90,7 +92,7 @@ frappe.ui.form.on('Purchase Receipt', {
 									// 		set_available_qty(items.item_code, items.warehouse, d, items)
 									// 	  });
 									// }
-								},
+								// },
 								// {
 								// 	label: 'Available Quantity',
 								// 	fieldname: 'available_qty',
@@ -104,6 +106,7 @@ frappe.ui.form.on('Purchase Receipt', {
 									fieldname: 'sales_order',
 									fieldtype: 'Link',
 									read_only:1,
+									columns:2,
 									options:'Sales Order',
 									in_list_view: true
 								},
@@ -130,15 +133,15 @@ frappe.ui.form.on('Purchase Receipt', {
 					primary_action(values){
 						// to make the below steps run serially(frappe.run_serially)
 						frappe.run_serially([
-							// () =>$.each(values.items, function (k, val) {
-							// 	$.each(frm.doc.items, function (k, item){
-							// 		if (item.name == val.child_name){
-							// 		if(val.quantity > (item.qty - item.reserved_quantity)){
-							// 			frappe.throw("Entered Quantity should not be greater than Stock Quantity")
-							// 		}
-							// 	}
-							// 	})
-							// }),
+							() =>$.each(values.items, function (k, val) {
+								$.each(frm.doc.items, function (k, item){
+									if (item.name == val.child_name){
+									if(val.quantity > (item.qty - item.reserved_quantity)){
+										frappe.throw("Entered Quantity should not be greater than Stock Quantity")
+									}
+								}
+								})
+							}),
 						() => frappe.call({
 							'method': 'stock_freezing.events.purchase_receipt.get_purchase_stock_entry',
 							'args': {'freeze': frm.doc.name,'dialog_items':values},
@@ -434,7 +437,7 @@ var fetch_sales_order = function (customer,frm,d) {
 					let r_dict = {
 						'item_code': val.item_code,
 						'quantity': val.reserved_quantity,
-						'warehouse':val.warehouse,
+						// 'warehouse':val.warehouse,
 						'sales_order':val.name,
 						'child_name': val.child_name,
 						'reserved' : val.reserved_quantity

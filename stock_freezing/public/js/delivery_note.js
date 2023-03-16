@@ -23,7 +23,7 @@ frappe.ui.form.on('Delivery Note',{
 			  )
 			// frm.set_value('set_warehouse', default_reservation_warehouse)
 			 $.each(frm.doc.items, function (k, val){
-				if(val.reserved_quantity > 0 && val.reserved_quantity <= val.qty){
+				if(val.reserved_quantity > 0 && val.reserved_quantity < val.qty){
 					val.qty = val.reserved_quantity
 					frappe.model.set_value(val.doctype, val.name, 'warehouse', default_reservation_warehouse)
 				// adding additinal row in delevery note item table
@@ -35,7 +35,9 @@ frappe.ui.form.on('Delivery Note',{
 					d.rate = val.rate
 					d.qty = val.actual_quantity -val.reserved_quantity
 					d.amount = d.qty*d.rate
-					}
+					d.against_sales_order = val.against_sales_order
+					d.so_detail = val.so_detail
+				}
 		})
 			})
 		},

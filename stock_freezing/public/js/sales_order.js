@@ -29,19 +29,6 @@ frappe.ui.form.on('Sales Order', {
 				let d = new frappe.ui.Dialog({
 					title: 'Select Items',
 					fields: [
-						// {
-						// 	label: 'Warehouse',
-						// 	fieldname: 'warehouse',
-						// 	fieldtype: 'Link',
-						// 	reqd:1,
-						// 	options:'Warehouse',
-						// 	get_query() {
-						// 		return {
-						// 			filters: {
-						// 				"name": ["in",["Reserved Warehouse - A"]],
-						// 			}
-						// 		}}
-						// },
 						{
 							fieldname: 'items',
 							fieldtype: 'Table',
@@ -62,21 +49,15 @@ frappe.ui.form.on('Sales Order', {
 									reqd: true,
 									in_list_view: true,
 									columns:2,
-									// onchange: () => {
-									// 		$.each(frm.doc.items, function (k, item){
-									// 			// console.log(item.qty)
-									// 			d.fields_dict.items.df.data.some(items => {
-									// 				d.fields_dict.items.grid.refresh();
-									// 				console.log(item.reserved_quantity)
-									// 				// if(item.reserved_quantity){
-									// 				// 	console.log(items.quantity)
-									// 				// 	if(items.quantity > (item.qty-item.reserved_quantity)){
-									// 				// 		frappe.throw("Entered Quantity should not be greater than Stock Quantity")
-									// 				// }
-									// 			// }
-									// 		})
-									// 	});
-									// }
+									onchange: () => {
+												// console.log(item.qty)
+												d.fields_dict.items.df.data.some(items => {
+													d.fields_dict.items.grid.refresh();
+														if(items.quantity > items.freeze_qty){
+															frappe.throw("Entered Quantity should not be greater than Stock Quantity")
+														}
+										});
+									}
 								},
 								{
 									label: 'Warehouse',
@@ -110,6 +91,12 @@ frappe.ui.form.on('Sales Order', {
 									fieldtype: 'Data',
 									read_only:1,
 									hidden:1
+								},
+								{
+									label: 'Freeze Qty',
+									fieldname: 'freeze_qty',
+									fieldtype: 'Data',
+									read_only:1,
 								},
 
 							]
@@ -150,7 +137,8 @@ frappe.ui.form.on('Sales Order', {
 							'quantity': item.qty - item.reserved_quantity,
 							'warehouse': item.warehouse,
 							'available_qty': item.actual_qty,
-							'child_name': item.name
+							'child_name': item.name,
+							'freeze_qty':item.qty - item.reserved_quantity
 					};
 						d.fields_dict.items.df.data.push(sl_no_dict);
 				}
@@ -199,7 +187,7 @@ frappe.ui.form.on('Sales Order', {
 												$.each(frm.doc.items, function (k, item){
 													d.fields_dict.items.df.data.some(items => {
 														d.fields_dict.items.grid.refresh();
-														if(items.quantity > item.reserved_quantity){
+														if(items.quantity > items.unfreeze){
 															frappe.throw("Entered Quantity should not be greater than frozen Quantity")
 
 														}
@@ -222,6 +210,13 @@ frappe.ui.form.on('Sales Order', {
 										read_only:1,
 										hidden:1
 									},
+									{
+										label: 'Unfreeze',
+										fieldname: 'unfreeze',
+										fieldtype: 'Data',
+										read_only:1,
+										hidden:1
+									}
 	
 								]
 							}
@@ -247,7 +242,7 @@ frappe.ui.form.on('Sales Order', {
 										if(!r.exc) {
 											frm.refresh();
 											frappe.msgprint(__("Stock Quantity Unfrozen for {0}", [frm.doc.name]));
-											frm.reload_doc();								
+											// frm.reload_doc();
 										}
 									}   
 								})
@@ -266,7 +261,8 @@ frappe.ui.form.on('Sales Order', {
 							'item_code': val.item_code,
 							'quantity': val.reserved_quantity,
 							'warehouse': default_reservation_warehouse,
-							'child_name': val.name
+							'child_name': val.name,
+							'unfreeze': val.reserved_quantity,
 						};
 						d.fields_dict.items.df.data.push(sl_no_dict);
 						d.fields_dict.items.grid.refresh();
