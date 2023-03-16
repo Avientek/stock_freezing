@@ -13,7 +13,7 @@ def get_purchase_stock_entry(freeze,dialog_items):
 	reserved=json.loads(dialog_items)
 	customer=reserved['customer']
 	reserved_warehouse=frappe.db.get_value("Stock Settings", "Stock Settings", "default_reservation_warehouse")
-	item_details=reserved['items']
+	item_details=reserved.get('items')
 	doc=frappe.get_doc('Purchase Receipt',freeze)
 	stock=frappe.get_doc({
 		'doctype': 'Stock Entry',

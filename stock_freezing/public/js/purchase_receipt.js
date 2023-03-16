@@ -66,8 +66,8 @@ frappe.ui.form.on('Purchase Receipt', {
 										// $.each(frm.doc.items, function (k, item){
 											d.fields_dict.items.df.data.some(items => {
 												d.fields_dict.items.grid.refresh();
-												if(items.quantity > items.quantity){
-													frappe.throw("Entered Quantity should not be greater than Stock Quantity")
+												if(items.quantity > items.reserved){
+													frappe.throw("Entered Quantity should not be greater than Ordered Quantity")
 												}
 										// })
 									});
@@ -107,13 +107,13 @@ frappe.ui.form.on('Purchase Receipt', {
 									options:'Sales Order',
 									in_list_view: true
 								},
-								// {
-								// 	label: 'Sales ref',
-								// 	fieldname: 'sales_ref',
-								// 	fieldtype: 'Data',
-								// 	read_only:1,
-								// 	hidden:1
-								// },
+								{
+									label: 'Reserved',
+									fieldname: 'reserved',
+									fieldtype: 'Data',
+									read_only:1
+									// in_list_view: true
+								},
 								{
 									label: 'Child Name',
 									fieldname: 'child_name',
@@ -211,7 +211,7 @@ frappe.ui.form.on('Purchase Receipt', {
 											e.fields_dict.items.df.data.some(items => {
 												e.fields_dict.items.grid.refresh();
 												if(items.quantity > (item.qty-item.reserved_quantity)){
-													frappe.throw("Entered Quantity should not be greater than Stock Quantity")
+													frappe.throw("Entered Quantity should not be greater than Ordered Quantity")
 												}
 										})
 									});
@@ -255,7 +255,7 @@ frappe.ui.form.on('Purchase Receipt', {
 								$.each(frm.doc.items, function (k, item){
 									if (item.name == val.child_name){
 									if(val.quantity > (item.qty - item.reserved_quantity)){
-										frappe.throw("Entered Quantity should not be greater than Stock Quantity")
+										frappe.throw("Entered Quantity should not be greater than Ordered Quantity")
 									}
 								}
 								})
@@ -284,7 +284,7 @@ frappe.ui.form.on('Purchase Receipt', {
 							'quantity': item.qty - item.reserved_quantity,
 							'warehouse':default_reservation_warehouse,
 							'sales_ref':item.sales_order_item,
-							'child_name': item.name
+							'child_name': item.name,
 						};
 						e.fields_dict.items.df.data.push(sl_no_dict);
 						e.fields_dict.items.grid.refresh();
@@ -427,20 +427,26 @@ var fetch_sales_order = function (customer,frm,d) {
 		company: frm.doc.company
 		},
 		callback: function(r) {
-		if (r.message){
+		if (r.message && r.message.length > 0){
+			d.fields_dict.items.df.data = [];
 			$.each(r.message, function (k, val) {
-				$.each(frm.doc.items, function (k, item) {
+				// $.each(frm.doc.items, function (k, item) {
 					let r_dict = {
 						'item_code': val.item_code,
 						'quantity': val.reserved_quantity,
-						'warehouse':item.warehouse,
+						'warehouse':val.warehouse,
 						'sales_order':val.name,
-						'child_name': val.child_name
+						'child_name': val.child_name,
+						'reserved' : val.reserved_quantity
+
 					};
 					d.fields_dict.items.df.data.push(r_dict);
 					d.fields_dict.items.grid.refresh();
+				// })
 				})
-				})
+			} else {
+				d.fields_dict.items.df.data = [];
+				d.fields_dict.items.grid.refresh();
 			}
 			}
 		});

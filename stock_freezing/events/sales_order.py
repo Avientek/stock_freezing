@@ -92,14 +92,20 @@ def unfreeze_sales_order(unfreeze, dialog_items):
 @frappe.whitelist()
 def get_sales_order_items(customer,items,company):
 	item_list=json.loads(items)
+	item_list_1  = []
 	for i in item_list:
 		item_code = i.get('item_code')
+		item_list_1.append(i.get('item_code'))
+	item_list_new = [frappe.db.escape(loan_acc) for loan_acc in item_list_1]
+	item_list_new = ", ".join(item_list_new)
+	print(item_list_new)
 	query = f'''
 		SELECT
 			so.name as name,
 			sot.item_code as item_code,
 			sot.qty-sot.reserved_quantity as reserved_quantity,
-			sot.name as child_name
+			sot.name as child_name,
+			sot.warehouse as warehouse
 
 		FROM
 			`tabSales Order` AS so LEFT JOIN
@@ -108,7 +114,7 @@ def get_sales_order_items(customer,items,company):
 
 		WHERE
 			so.docstatus=1 AND so.customer = "{customer}" AND
-			so.company = "{company}" AND sot.item_code = "{item_code}" AND
+			so.company = "{company}" AND sot.item_code in ({item_list_new}) AND
 			sot.qty - sot.delivered_qty - reserved_quantity > 0
 	'''
 	data = frappe.db.sql(f"{query}", as_dict=True)

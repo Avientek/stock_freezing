@@ -124,7 +124,7 @@ frappe.ui.form.on('Sales Order', {
 									$.each(frm.doc.items, function (k, item){
 										if (item.name == val.child_name){
 										if(val.quantity > (item.qty - item.reserved_quantity)){
-											frappe.throw("Entered Quantity should not be greater than Stock Quantity")
+											frappe.throw("Entered Quantity should not be greater than Ordered Quantity")
 										}
 									}
 									})
