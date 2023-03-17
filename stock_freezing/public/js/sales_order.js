@@ -131,7 +131,7 @@ frappe.ui.form.on('Sales Order', {
 					}           
 				});
 				$.each(frm.doc.items, function (k, item) {
-					if ((item.qty - item.reserved_quantity) > 0){
+					if (item.qty != item.delivered_qty){
 						let sl_no_dict = {
 							'item_code': item.item_code,
 							'quantity': item.qty - item.reserved_quantity,
@@ -142,19 +142,25 @@ frappe.ui.form.on('Sales Order', {
 					};
 						d.fields_dict.items.df.data.push(sl_no_dict);
 				}
-						// d.fields_dict["quantity"].df.onchange = () => {
-						//     console.log("hello")
-						// }
-						// console.log(sl_no_dict['quantity'])
-						// if(sl_no_dict['quantity']<=item.qty){
-						//     console.log("hhh")
-						// }
-						// else{
-						//     frappe.throw("Item quantity cannot be greater than item quantity")
-						// }
-				});
 				d.fields_dict.items.grid.refresh();
 				d.show();
+
+				if (item.qty == item.delivered_qty){
+					let sl_no_dict = {
+						'item_code': item.item_code,
+						'quantity':'',
+						'warehouse': item.warehouse,
+						'available_qty':item.actual_qty,
+						'child_name': item.name,
+						'freeze_qty':''
+				};
+					// d.fields_dict.items.df.data.push(sl_no_dict);
+			}
+			d.fields_dict.items.grid.refresh();
+			d.show();
+				});
+				// d.fields_dict.items.grid.refresh();
+				// d.show();
 			}, __('Reserve'));
 		}
 
@@ -254,7 +260,7 @@ frappe.ui.form.on('Sales Order', {
 				// let stock_entry = frappe.db.get_doc('Stock Entry', null, { 'sales_order': frm.doc.name, 'stock_entry_type':'Freeze'})
 				// .then(doc => {
 					$.each(frm.doc.items, function (k, val) {
-						if ((val.reserved_quantity) > 0){
+						if (val.reserved_quantity > 0 && val.qty != val.delivered_qty){
 						frappe.db.get_single_value('Stock Settings', 'default_reservation_warehouse')
 							.then(default_reservation_warehouse => {
 						let sl_no_dict = {
@@ -268,12 +274,25 @@ frappe.ui.form.on('Sales Order', {
 						d.fields_dict.items.grid.refresh();
 					})
 					}
+					d.show();
+					if (val.qty == val.delivered_qty){
+						let sl_no_dict = {
+							'item_code': val.item_code,
+							'quantity':'',
+							'warehouse': default_reservation_warehouse,
+							'child_name': item.name,
+							'freeze_qty':''
+					};
+						// d.fields_dict.items.df.data.push(sl_no_dict);
+				}
+				d.fields_dict.items.grid.refresh();
+				d.show();
 				})
 
 				// });
 				// d.fields_dict.items.grid.refresh();
 
-				d.show();
+				
 
 			}, __('Reserve'));
 
