@@ -2,13 +2,22 @@
 
 frappe.ui.form.on('Sales Order', {
 	onload:function(frm){
-		frappe.db.get_single_value('Stock Settings', 'default_reservation_warehouse')
-		.then(default_reservation_warehouse => {
+		if(frm.doc.__islocal){
+			$.each(frm.doc.items, function (k, val) {
+				if(val.reserved_quantity){
+					frappe.model.set_value(val.doctype, val.name, 'reserved_quantity', 0)
+				}
+
+			})
+		}
+		frappe.db.get_value('Company', frm.doc.company, 'default_reservation_warehouse')
+			.then(r => {
+			if(r.message.default_reservation_warehouse){
 			frm.set_query('set_warehouse', function(doc) {
 				return {
 				  "filters": [
 					['company', '=', frm.doc.company],
-					['name', '!=', default_reservation_warehouse],
+					['name', '!=', r.message.default_reservation_warehouse],
 					['is_group', '=', 'No']
 				  ]
 				}
@@ -18,12 +27,12 @@ frappe.ui.form.on('Sales Order', {
 				return {
 				  "filters": [
 					['company', '=', frm.doc.company],
-					['name', '!=', default_reservation_warehouse],
+					['name', '!=', r.message.default_reservation_warehouse],
 					['is_group', '=', 'No']
 				  ]
 				}}
 			  )
-			})
+	}})
 		if(frm.doc.docstatus==1){
 			frm.add_custom_button(__("Freeze"),function (){
 				let d = new frappe.ui.Dialog({
@@ -65,6 +74,7 @@ frappe.ui.form.on('Sales Order', {
 									fieldtype: 'Link',
 									reqd: true,
 									columns:3,
+									read_only:1,
 									options:'Warehouse',
 									in_list_view: true,
 									onchange: () => {
@@ -82,6 +92,7 @@ frappe.ui.form.on('Sales Order', {
 									fieldname: 'available_qty',
 									fieldtype: 'Float',
 									reqd: true,
+									read_only:1,
 									columns:3,
 									in_list_view: true
 								},
@@ -118,7 +129,7 @@ frappe.ui.form.on('Sales Order', {
 							}),
 						() => frappe.call({
 							'method': 'stock_freezing.events.sales_order.create_stock_entry',
-							'args': {'freeze': frm.doc.name,'dialog_items':values},
+							'args': {'freeze': frm.doc.name,'company':frm.doc.company, 'dialog_items':values},
 							callback: function (r) {
 								if(!r.exc) {
 									frm.refresh();
@@ -243,7 +254,7 @@ frappe.ui.form.on('Sales Order', {
 							}),
 								() =>frappe.call({
 									'method': 'stock_freezing.events.sales_order.unfreeze_sales_order',
-									'args': {'unfreeze': frm.doc.name , 'dialog_items':values},
+									'args': {'unfreeze': frm.doc.name , 'company':frm.doc.company, 'dialog_items':values},
 									callback: function(r) {
 										if(!r.exc) {
 											frm.refresh();
@@ -261,25 +272,26 @@ frappe.ui.form.on('Sales Order', {
 				// .then(doc => {
 					$.each(frm.doc.items, function (k, val) {
 						if (val.reserved_quantity > 0 && val.qty != val.delivered_qty){
-						frappe.db.get_single_value('Stock Settings', 'default_reservation_warehouse')
-							.then(default_reservation_warehouse => {
+							frappe.db.get_value('Company', frm.doc.company, 'default_reservation_warehouse')
+							.then(r => {
+							if(r.message.default_reservation_warehouse){
 						let sl_no_dict = {
 							'item_code': val.item_code,
 							'quantity': val.reserved_quantity,
-							'warehouse': default_reservation_warehouse,
+							'warehouse': r.message.default_reservation_warehouse,
 							'child_name': val.name,
 							'unfreeze': val.reserved_quantity,
 						};
 						d.fields_dict.items.df.data.push(sl_no_dict);
 						d.fields_dict.items.grid.refresh();
-					})
+						}})
 					}
 					d.show();
 					if (val.qty == val.delivered_qty){
 						let sl_no_dict = {
 							'item_code': val.item_code,
 							'quantity':'',
-							'warehouse': default_reservation_warehouse,
+							'warehouse': r.message.default_reservation_warehouse,
 							'child_name': item.name,
 							'freeze_qty':''
 					};
@@ -287,7 +299,7 @@ frappe.ui.form.on('Sales Order', {
 				}
 				d.fields_dict.items.grid.refresh();
 				d.show();
-				})
+			})
 
 				// });
 				// d.fields_dict.items.grid.refresh();

@@ -1,12 +1,13 @@
 frappe.ui.form.on('Purchase Order', {
 	onload:function(frm){
-		frappe.db.get_single_value('Stock Settings', 'default_reservation_warehouse')
-		.then(default_reservation_warehouse => {
+		frappe.db.get_value('Company', frm.doc.company, 'default_reservation_warehouse')
+		.then(r => {
+		if(r.message.default_reservation_warehouse){
 			frm.set_query('set_warehouse', function(doc) {
 				return {
 					"filters": [
 						['company', '=', frm.doc.company],
-						['name', '!=', default_reservation_warehouse],
+						['name', '!=', r.message.default_reservation_warehouse],
 						['is_group', '=', 'No']
 				  	]
 				}
@@ -16,11 +17,11 @@ frappe.ui.form.on('Purchase Order', {
 				return {
 				  "filters": [
 						['company', '=', frm.doc.company],
-						['name', '!=', default_reservation_warehouse],
+						['name', '!=', r.message.default_reservation_warehouse],
 						['is_group', '=', 'No']
 					]
 				}}
 			  )
-			})
+	}})
 		}
 	})

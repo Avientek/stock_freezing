@@ -6,13 +6,14 @@ frappe.ui.form.on('Purchase Receipt', {
 	// 			frm.set_value('from_so', '1')
 	// 		}
 	// 	})
-		frappe.db.get_single_value('Stock Settings', 'default_reservation_warehouse')
-		.then(default_reservation_warehouse => {
+	frappe.db.get_value('Company', frm.doc.company, 'default_reservation_warehouse')
+	.then(r => {
+	if(r.message.default_reservation_warehouse){
 			frm.set_query('set_warehouse', function(doc) {
 				return {
 				  "filters": [
 					['company', '=', frm.doc.company],
-					['name', '!=', default_reservation_warehouse],
+					['name', '!=', r.message.default_reservation_warehouse],
 					['is_group', '=', 'No']
 				  ]
 				}
@@ -22,12 +23,12 @@ frappe.ui.form.on('Purchase Receipt', {
 				return {
 				  "filters": [
 					['company', '=', frm.doc.company],
-					['name', '!=', default_reservation_warehouse],
+					['name', '!=', r.message.default_reservation_warehouse],
 					['is_group', '=', 'No']
 				  ]
 				}}
 			  )
-			})
+	}})
 		if(frm.doc.docstatus==1 && frm.doc.from_so == 0){
 			frm.add_custom_button(__("Freeze"),function (){
 				let selected_customer = '';
@@ -38,10 +39,7 @@ frappe.ui.form.on('Purchase Receipt', {
 							label: 'Customer',
 							fieldname: 'customer',
 							fieldtype: 'Link',
-							options:'Customer',
-							// onchange: () => {
-							//
-							// }
+							options:'Customer'
 						},
 						{
 							fieldname: 'items',
@@ -143,12 +141,12 @@ frappe.ui.form.on('Purchase Receipt', {
 								})
 							}),
 						() => frappe.call({
-							'method': 'stock_freezing.events.purchase_receipt.get_purchase_stock_entry',
-							'args': {'freeze': frm.doc.name,'dialog_items':values},
+							'method': 'stock_freezing.events.purchase_receipt.make_purchase_stock_entry',
+							'args': {'freeze': frm.doc.name, 'company': frm.doc.company, 'dialog_items':values},
 							callback: function (r) {
 								if(!r.exc) {
 									frm.refresh();
-									frappe.msgprint(__(" Purchase Receipt Frozen for {0}", [frm.doc.name]));
+									frappe.msgprint(__("Items are allocated to Respective Sales Orders"));
 								}
 							}
 						})
@@ -265,11 +263,11 @@ frappe.ui.form.on('Purchase Receipt', {
 							}),
 						() => frappe.call({
 							'method': 'stock_freezing.events.purchase_receipt.set_reserved_quantity',
-							'args': {'freeze': frm.doc.name,'dialog_items':values},
+							'args': {'freeze': frm.doc.name, 'company':frm.doc.company, 'dialog_items':values},
 							callback: function (r) {
 								if(!r.exc) {
 									frm.refresh();
-									frappe.msgprint(__(" Purchase Receipt Frozen for {0}", [frm.doc.name]));
+									frappe.msgprint(__("Items are allocated to Sales Order"));
 								}
 							}
 						})
@@ -280,18 +278,19 @@ frappe.ui.form.on('Purchase Receipt', {
 				$.each(frm.doc.items, function (k, item) {
 					
 					if ((item.qty - item.reserved_quantity) > 0){
-						frappe.db.get_single_value('Stock Settings', 'default_reservation_warehouse')
-							.then(default_reservation_warehouse => {
+						frappe.db.get_value('Company', frm.doc.company, 'default_reservation_warehouse')
+						.then(r => {
+						if(r.message.default_reservation_warehouse){
 						let sl_no_dict = {
 							'item_code': item.item_code,
 							'quantity': item.qty - item.reserved_quantity,
-							'warehouse':default_reservation_warehouse,
+							'warehouse':r.message.default_reservation_warehouse,
 							'sales_ref':item.sales_order_item,
 							'child_name': item.name,
 						};
 						e.fields_dict.items.df.data.push(sl_no_dict);
 						e.fields_dict.items.grid.refresh();
-					})
+					}})
 					}
 				});
 				e.fields_dict.items.grid.refresh();

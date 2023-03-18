@@ -3,7 +3,7 @@
   "add_to_transit": 0,
   "docstatus": 0,
   "doctype": "Stock Entry Type",
-  "modified": "2023-03-16 18:19:40.862624",
+  "modified": "2023-03-03 06:10:09.033906",
   "name": "Freeze",
   "purpose": "Material Transfer"
  },
@@ -11,8 +11,8 @@
   "add_to_transit": 0,
   "docstatus": 0,
   "doctype": "Stock Entry Type",
-  "modified": "2023-03-16 18:20:05.360753",
-  "name": "UnFreeze",
+  "modified": "2023-03-03 06:10:30.167065",
+  "name": "Unfreeze",
   "purpose": "Material Transfer"
  }
 ]

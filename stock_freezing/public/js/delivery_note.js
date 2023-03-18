@@ -1,12 +1,13 @@
 frappe.ui.form.on('Delivery Note',{
 	onload:function(frm){
-		frappe.db.get_single_value('Stock Settings', 'default_reservation_warehouse')
-		.then(default_reservation_warehouse => {
+		frappe.db.get_value('Company', frm.doc.company, 'default_reservation_warehouse')
+		.then(r => {
+		if(r.message.default_reservation_warehouse){
 			frm.set_query('set_warehouse', function(doc) {
 				return {
 				  "filters": [
 					['company', '=', frm.doc.company],
-					['name', '!=', default_reservation_warehouse],
+					['name', '!=', r.message.default_reservation_warehouse],
 					['is_group', '=', 'No']
 				  ]
 				}
@@ -16,7 +17,7 @@ frappe.ui.form.on('Delivery Note',{
 				return {
 				  "filters": [
 					['company', '=', frm.doc.company],
-					['name', '!=', default_reservation_warehouse],
+					['name', '!=', r.message.default_reservation_warehouse],
 					['is_group', '=', 'No']
 				  ]
 				}}
@@ -25,7 +26,7 @@ frappe.ui.form.on('Delivery Note',{
 			 $.each(frm.doc.items, function (k, val){
 				if(val.reserved_quantity > 0 && val.reserved_quantity < val.qty){
 					val.qty = val.reserved_quantity
-					frappe.model.set_value(val.doctype, val.name, 'warehouse', default_reservation_warehouse)
+					frappe.model.set_value(val.doctype, val.name, 'warehouse', r.message.default_reservation_warehouse)
 				// adding additinal row in delevery note item table
 					var d = frappe.model.add_child(frm.doc, "Delivery Note Item", "items");
 					d.item_code = val.item_code
@@ -39,7 +40,7 @@ frappe.ui.form.on('Delivery Note',{
 					d.so_detail = val.so_detail
 				}
 		})
-			})
+	}})
 		},
 	setup: function (frm) {
 		frm.set_indicator_formatter("item_code", (doc) => {
