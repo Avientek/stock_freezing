@@ -9,9 +9,9 @@ def validate(self,method):
 
 
 @frappe.whitelist()
-def create_stock_entry(freeze, dialog_items):
+def create_stock_entry(freeze, company, dialog_items):
 	reserved=json.loads(dialog_items)
-	reserved_warehouse=frappe.db.get_value("Stock Settings", "Stock Settings", "default_reservation_warehouse")
+	reserved_warehouse = frappe.db.get_value('Company', company, 'default_reservation_warehouse')
 	item_details=reserved['items']
 	doc=frappe.get_doc('Sales Order',freeze)
 	stock=frappe.get_doc({
@@ -41,17 +41,18 @@ def create_stock_entry(freeze, dialog_items):
 	stock.submit()
 	for item in item_details:
 		for i in doc.items:
-			r_quantity = i.reserved_quantity + float(item.get('quantity'))
-			frappe.db.set_value('Sales Order Item', item.get('child_name'), 'reserved_quantity', r_quantity)
+			if not i.qty <  i.reserved_quantity + float(item.get('quantity')):
+				r_quantity = i.reserved_quantity + float(item.get('quantity'))
+				frappe.db.set_value('Sales Order Item', item.get('child_name'), 'reserved_quantity', r_quantity)
 	frappe.db.set_value('Sales Order', doc.name, 'is_frozen', 1)
 
 
 
 @frappe.whitelist()
-def unfreeze_sales_order(unfreeze, dialog_items):
+def unfreeze_sales_order(unfreeze, company, dialog_items):
 	unfreeze_dict = json.loads(dialog_items)
 	unfreeze_items = unfreeze_dict['items']
-	reserved_warehouse=frappe.db.get_value("Stock Settings", "Stock Settings", "default_reservation_warehouse")
+	reserved_warehouse=frappe.db.get_value('Company', company, 'default_reservation_warehouse')
 	doc=frappe.get_doc('Sales Order',unfreeze)
 	stock_entry = frappe.db.get_value('Stock Entry', {'sales_order': unfreeze}, ["name"])
 	stock=frappe.get_doc('Stock Entry', stock_entry)
@@ -62,15 +63,6 @@ def unfreeze_sales_order(unfreeze, dialog_items):
 		'from_warehouse':reserved_warehouse,
 		'to_warehouse':doc.set_warehouse
 		})
-	# for i in stock.items:
-	# 	new_stock.append('items', {
-	# 		"item_code": i.item_code,
-	# 		"qty":i.qty,
-	# 		"uom":i.uom,
-	# 		"s_warehouse":i.t_warehouse,
-	# 		"t_warehouse":i.s_warehouse,
-	# 		"allow_zero_valuation_rate":1
-	# 	})
 	for item in unfreeze_items:
 		new_stock.append('items', {
 			"item_code": item.get('item_code'),
@@ -84,8 +76,9 @@ def unfreeze_sales_order(unfreeze, dialog_items):
 	# frappe.db.set_value('Sales Order', doc.name, 'is_frozen', 0)
 	for item in unfreeze_items:
 		for i in doc.items:
-			r_quantity = i.reserved_quantity - float(item.get('quantity'))
-			frappe.db.set_value("Sales Order Item", item.get('child_name'), "reserved_quantity", r_quantity)
+			if not i.qty <  i.reserved_quantity - float(item.get('quantity')):
+				r_quantity = i.reserved_quantity - float(item.get('quantity'))
+				frappe.db.set_value("Sales Order Item", item.get('child_name'), "reserved_quantity", r_quantity)
 
 
 
@@ -98,7 +91,7 @@ def get_sales_order_items(customer,items,company):
 		item_list_1.append(i.get('item_code'))
 	item_list_new = [frappe.db.escape(loan_acc) for loan_acc in item_list_1]
 	item_list_new = ", ".join(item_list_new)
-	print(item_list_new)
+	# print(item_list_new)
 	query = f'''
 		SELECT
 			so.name as name,

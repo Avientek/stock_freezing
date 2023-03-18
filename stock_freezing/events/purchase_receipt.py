@@ -9,10 +9,10 @@ def validate(self,method):
 
 
 @frappe.whitelist()
-def get_purchase_stock_entry(freeze,dialog_items):
+def make_purchase_stock_entry(freeze, company, dialog_items):
 	reserved=json.loads(dialog_items)
 	customer=reserved['customer']
-	reserved_warehouse=frappe.db.get_value("Stock Settings", "Stock Settings", "default_reservation_warehouse")
+	reserved_warehouse=frappe.db.get_value('Company', company, 'default_reservation_warehouse')
 	item_details=reserved.get('items')
 	doc=frappe.get_doc('Purchase Receipt',freeze)
 	stock=frappe.get_doc({
@@ -43,9 +43,9 @@ def get_purchase_stock_entry(freeze,dialog_items):
 
 
 @frappe.whitelist()
-def set_reserved_quantity(freeze,dialog_items):
+def set_reserved_quantity(freeze, company, dialog_items):
 	reserved=json.loads(dialog_items)
-	reserved_warehouse=frappe.db.get_value("Stock Settings", "Stock Settings", "default_reservation_warehouse")
+	reserved_warehouse=frappe.db.get_value("Company", company, "default_reservation_warehouse")
 	item_details=reserved['items']
 	doc=frappe.get_doc('Purchase Receipt',freeze)
 	stock=frappe.get_doc({

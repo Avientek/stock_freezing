@@ -204,7 +204,7 @@ doc_events = {
 # ]
 fixtures = [
     {
-        " ": "Custom Field",
+        "dt": "Custom Field",
         "filters": [
             ["name", "in",
       [
@@ -220,8 +220,8 @@ fixtures = [
         'Purchase Receipt Item-sales_order_item',
         'Purchase Receipt Item-sales_order',
         'Delivery Note Item-reserved_quantity',
-				'Stock Settings-default_reservation_warehouse',
-        'Purchase Receipt-from_so'
+        'Purchase Receipt-from_so',
+        'Company-default_reservation_warehouse'
 ]
       ]]
     },
