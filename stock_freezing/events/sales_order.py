@@ -35,7 +35,9 @@ def create_stock_entry(freeze, company, dialog_items):
 		"allow_zero_valuation_rate":1,
 		"basic_rate":rate,
 		"s_warehouse":source_warehouse,
-		"amount":amount
+		"amount":amount,
+		"sales_order":freeze,
+		"sales_order_item":item.get('child_name')
 		})
 	stock.insert()
 	stock.submit()
@@ -69,7 +71,9 @@ def unfreeze_sales_order(unfreeze, company, dialog_items):
 			"qty":item.get('quantity'),
 			"s_warehouse":item.get('warehouse'),
 			# "t_warehouse":stock.from_warehouse,
-			"allow_zero_valuation_rate":1
+			"allow_zero_valuation_rate":1,
+			"sales_order":unfreeze,
+			"sales_order_item":item.get('child_name')
 		})
 	new_stock.insert()
 	new_stock.submit()
@@ -89,7 +93,7 @@ def get_sales_order_items(customer,items,company):
 	for i in item_list:
 		item_code = i.get('item_code')
 		item_list_1.append(i.get('item_code'))
-	item_list_new = [frappe.db.escape(loan_acc) for loan_acc in item_list_1]
+	item_list_new = [frappe.db.escape(i) for i in item_list_1]
 	item_list_new = ", ".join(item_list_new)
 	# print(item_list_new)
 	query = f'''

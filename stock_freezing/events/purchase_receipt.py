@@ -14,6 +14,7 @@ def make_purchase_stock_entry(freeze, company, dialog_items):
 	customer=reserved['customer']
 	reserved_warehouse=frappe.db.get_value('Company', company, 'default_reservation_warehouse')
 	item_details=reserved.get('items')
+	print('\n\n\n\n\n\n\nitems', item_details)
 	doc=frappe.get_doc('Purchase Receipt',freeze)
 	stock=frappe.get_doc({
 		'doctype': 'Stock Entry',
@@ -31,6 +32,8 @@ def make_purchase_stock_entry(freeze, company, dialog_items):
 		"conversion_factor":1,
 		"t_warehouse":reserved_warehouse,
 		"allow_zero_valuation_rate":1,
+		"sales_order":item.get('sales_order'),
+		"sales_order_item":item.get('child_name')
 		})
 	stock.insert()
 	stock.submit()
