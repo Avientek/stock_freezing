@@ -120,8 +120,10 @@ doc_events = {
 	},
 	"Purchase Receipt":{
 	  "validate":"stock_freezing.events.purchase_receipt.validate"
-
-	}
+  },
+  "Stock Entry": {
+		"on_cancel": "stock_freezing.events.stock_entry.on_cancel"
+	},
 	# "Item": {
 	# 	"validate": "avientek.events.item.validate_brand_pn"
 	# }
@@ -221,7 +223,9 @@ fixtures = [
         'Purchase Receipt Item-sales_order',
         'Delivery Note Item-reserved_quantity',
         'Purchase Receipt-from_so',
-        'Company-default_reservation_warehouse'
+        'Company-default_reservation_warehouse',
+        'Stock Entry Detail-sales_order',
+        'Stock Entry Detail-sales_order_item'
 ]
       ]]
     },
