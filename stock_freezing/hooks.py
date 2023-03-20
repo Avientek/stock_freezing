@@ -32,7 +32,6 @@ app_license = "MIT"
 doctype_js = {
 	"Sales Order": "public/js/sales_order.js",
 	"Purchase Receipt": "public/js/purchase_receipt.js",
-	# "Stock Settings": "public/js/stock_settings.js",
 	"Delivery Note": "public/js/delivery_note.js",
 	"Purchase Order": "public/js/purchase_order.js",
 	"Purchase Invoice": "public/js/purchase_invoice.js",
@@ -119,10 +118,11 @@ doc_events = {
 		"validate":"stock_freezing.events.sales_order.validate"
 	},
 	"Purchase Receipt":{
-	  "validate":"stock_freezing.events.purchase_receipt.validate"
-  },
-  "Stock Entry": {
-		"on_cancel": "stock_freezing.events.stock_entry.on_cancel"
+		"validate":"stock_freezing.events.purchase_receipt.validate"
+	},
+	"Stock Entry": {
+		# "on_cancel": "stock_freezing.events.stock_entry.on_cancel",
+		"on_submit": "stock_freezing.events.stock_entry.on_submit"
 	},
 	# "Item": {
 	# 	"validate": "avientek.events.item.validate_brand_pn"
@@ -205,34 +205,35 @@ doc_events = {
 #	"stock_freezing.auth.validate"
 # ]
 fixtures = [
-    {
-        "dt": "Custom Field",
-        "filters": [
-            ["name", "in",
-      [
-        #Sales Order
-        'Sales Order-is_frozen',
-        'Stock Entry-sales_order',
-        'Sales Order Item-reserved_quantity',
-        'Purchase Receipt-is_frozen',
-        'Stock Entry-purchase_receipt',
-        'Stock Entry-column_break_abtpd',
-        'Delivery Note Item-actual_quantity',
-        'Sales Order Item-actual_quantity',
-        'Purchase Receipt Item-sales_order_item',
-        'Purchase Receipt Item-sales_order',
+	{
+		"dt": "Custom Field",
+		"filters": [
+			["name", "in",
+	  [
+		'Purchase Receipt-is_frozen',
+		'Delivery Note Item-actual_quantity',
         'Delivery Note Item-reserved_quantity',
+        'Sales Order-is_frozen',
+        'Sales Order Item-reserved_quantity',
+		'Sales Order Item-actual_quantity',
         'Purchase Receipt-from_so',
-        'Company-default_reservation_warehouse',
-        'Stock Entry Detail-sales_order',
-        'Stock Entry Detail-sales_order_item'
+		'Purchase Receipt Item-sales_order_item',
+		'Purchase Receipt Item-sales_order',
+        'Purchase Receipt Item-reserved_quantity',
+		'Company-default_reservation_warehouse',
+        'Stock Entry-sales_order',
+        'Stock Entry-purchase_receipt',
+		'Stock Entry-column_break_abtpd',
+		'Stock Entry Detail-sales_order',
+		'Stock Entry Detail-sales_order_item',
+        'Stock Entry Detail-avientek_pr_item',
 ]
-      ]]
-    },
-    {"dt":"Property Setter",
-        "filters": [["doc_type", "in", ("Purchase Order Item")]]
-      },
-    {"dt":"Stock Entry Type",
-      "filters": [["name", "in", ["Freeze", "Unfreeze"]]]
-    }
+	  ]]
+	},
+	{"dt":"Property Setter",
+		"filters": [["doc_type", "in", ("Purchase Order Item")]]
+	  },
+	{"dt":"Stock Entry Type",
+	  "filters": [["name", "in", ["Freeze", "Unfreeze"]]]
+	}
 			]

@@ -7,112 +7,36 @@ def validate(self,method):
 		if i.sales_order:
 			self.from_so = 1
 
-
 @frappe.whitelist()
-def make_purchase_stock_entry(freeze, company, dialog_items):
+def freeze_from_pr(docname, doctype, dialog_items, type):
+	doc=frappe.get_doc(doctype, docname)
 	reserved=json.loads(dialog_items)
-	customer=reserved['customer']
-	reserved_warehouse=frappe.db.get_value('Company', company, 'default_reservation_warehouse')
-	item_details=reserved.get('items')
-	print('\n\n\n\n\n\n\nitems', item_details)
-	doc=frappe.get_doc('Purchase Receipt',freeze)
+	reserve_warehouse=frappe.db.get_value('Company', doc.company, 'default_reservation_warehouse')
+	item_details = reserved.get('items')
+
 	stock=frappe.get_doc({
 		'doctype': 'Stock Entry',
 		'from_warehouse':doc.set_warehouse,
-		'to_warehouse':reserved_warehouse,
+		'to_warehouse':reserve_warehouse,
 		'stock_entry_type':'Freeze',
-		'purchase_receipt':doc.name
+		'purchase_receipt':doc.name,
 	})
 	for item in item_details:
-		item_code=item.get('item_code')
-		quantity=item.get('quantity')
+		warehouse = ""
+		if type=="freeze_wo_so":
+			warehouse, pr_item_name = frappe.db.get_value('Purchase Receipt Item', {'item_code': item.get('item_code'), 'parent':docname}, ["warehouse", "name"])
+		else:
+			warehouse = frappe.db.get_value('Purchase Receipt Item', {'name': item.get('child_name')}, ["warehouse"])
 		stock.append('items', {
-		"item_code": item_code,
-		"qty":quantity,
-		"conversion_factor":1,
-		"t_warehouse":reserved_warehouse,
-		"allow_zero_valuation_rate":1,
-		"sales_order":item.get('sales_order'),
-		"sales_order_item":item.get('child_name')
+			"item_code": item.get('item_code'),
+			"qty":item.get('quantity'),
+			"conversion_factor":1,
+			"basic_rate":item.get('rate'),
+			"amount": item.get('amount'),
+			"t_warehouse": reserve_warehouse,
+			"s_warehouse": warehouse,
+			"allow_zero_valuation_rate":1,
+			"sales_order_item":item.get('sales_ref'),
+			"avientek_pr_item":item.get('child_name') if type=="freeze" else pr_item_name,
 		})
-	stock.insert()
-	stock.submit()
-	for item in item_details:
-		reserved_qty = frappe.db.get_value('Sales Order Item', item.get('child_name'), 'reserved_quantity')
-		set_qty = reserved_qty + float(item.get('quantity'))
-		frappe.db.set_value('Sales Order Item', item.get('child_name'), 'reserved_quantity', set_qty)
-	frappe.db.set_value('Purchase Receipt', doc.name, 'is_frozen', 1)
-
-
-
-@frappe.whitelist()
-def set_reserved_quantity(freeze, company, dialog_items):
-	reserved=json.loads(dialog_items)
-	reserved_warehouse=frappe.db.get_value("Company", company, "default_reservation_warehouse")
-	item_details=reserved['items']
-	doc=frappe.get_doc('Purchase Receipt',freeze)
-	stock=frappe.get_doc({
-		'doctype': 'Stock Entry',
-		'from_warehouse':doc.set_warehouse,
-		'to_warehouse':reserved_warehouse,
-		'stock_entry_type':'Freeze',
-		'purchase_receipt':doc.name
-	})
-	for item in item_details:
-		item_code=item.get('item_code')
-		rate=item.get('rate')
-		amount=item.get('amount')
-		quantity=item.get('quantity')
-		stock.append('items', {
-		"item_code": item_code,
-		"qty":quantity,
-		"conversion_factor":1,
-		"t_warehouse":reserved_warehouse,
-		"allow_zero_valuation_rate":1,
-		"basic_rate":rate,
-		"amount":amount
-		})
-	stock.insert()
-	stock.submit()
-	for item in item_details:
-		for i in doc.items:
-			if item.get('item_code') == i.item_code:
-				r_quantity = i.reserved_quantity + float(item.get('quantity'))
-				frappe.db.set_value('Purchase Receipt Item', item.get('child_name'), 'reserved_quantity', r_quantity)
-				frappe.db.set_value('Sales Order Item', i.sales_order_item, 'reserved_quantity', r_quantity)
-	frappe.db.set_value('Purchase Receipt', doc.name, 'is_frozen', 1)
-
-
-# @frappe.whitelist()
-# def	unfreeze_purchase_receipt(unfreeze, dialog_items):
-# 	unfreeze_dict = json.loads(dialog_items)
-# 	unfreeze_items = unfreeze_dict['items']
-# 	reserved_warehouse=frappe.db.get_value("Stock Settings", "Stock Settings", "default_reservation_warehouse")
-# 	doc=frappe.get_doc('Purchase Receipt',unfreeze)
-# 	stock_entry = frappe.db.get_value('Stock Entry', {'purchase_receipt': unfreeze}, ["name"])
-# 	stock=frappe.get_doc('Stock Entry', stock_entry)
-# 	new_stock=frappe.get_doc({
-# 		'doctype': 'Stock Entry',
-# 		'stock_entry_type':'Unfreeze',
-# 		'purchase_receipt':doc.name,
-# 		'from_warehouse':reserved_warehouse,
-# 		'to_warehouse':doc.set_warehouse
-# 		})
-
-# 	for item in unfreeze_items:
-# 		new_stock.append('items', {
-# 			"item_code": item.get('item_code'),
-# 			"qty":item.get('quantity'),
-# 			"s_warehouse":item.get('warehouse'),
-# 			"allow_zero_valuation_rate":1
-# 		})
-
-# 	new_stock.insert()
-# 	new_stock.submit()
-# 	for item in unfreeze_items:
-# 		for i in doc.items:
-# 			if item.get('item_code') == i.item_code:
-# 				r_quantity = i.reserved_quantity - float(item.get('quantity'))
-# 				frappe.db.set_value('Purchase Receipt Item', item.get('child_name'), 'reserved_quantity', r_quantity)
-# 				frappe.db.set_value('Sales Order Item', i.sales_order_item, 'reserved_quantity', r_quantity)
-
+	stock.insert().submit()
