@@ -18,8 +18,10 @@ def on_submit(self, method):
 			if item.sales_order_item and item.sales_order:
 				so_item_dict = frappe.db.get_value("Sales Order Item", item.sales_order_item, ['reserved_quantity', 'qty'], as_dict=1)
 				if float(so_item_dict.qty) >= float(so_item_dict.reserved_quantity) - float(item.get('qty')):
-					if float(so_item_dict.reserved_quantity) - float(item.get('qty')) > 0:
-						frappe.db.set_value("Sales Order Item", item.sales_order_item, "reserved_quantity", float(so_item_dict.reserved_quantity) - float(item.get('qty')))
+					set_qty = 0
+					if float(so_item_dict.reserved_quantity) - float(item.get('qty')) >= 0:
+						set_qty = float(so_item_dict.reserved_quantity) - float(item.get('qty'))
+					frappe.db.set_value("Sales Order Item", item.sales_order_item, "reserved_quantity", set_qty)
 
 
 # def on_cancel(self, method):
