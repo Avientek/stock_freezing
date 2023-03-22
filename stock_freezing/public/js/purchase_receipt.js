@@ -173,41 +173,6 @@ frappe.ui.form.on('Purchase Receipt', {
 	}
 })
 
-// var fetch_sales_order = function (customer, frm, d) {
-// 		frappe.call({
-// 		method: "stock_freezing.events.sales_order.get_sales_order_items",
-// 		args: {
-// 		customer: customer,
-// 		items: frm.doc.items,
-// 		company: frm.doc.company
-// 		},
-// 		callback: function(r) {
-// 		if (r.message && r.message.length > 0){
-// 			d.fields_dict.items.df.data = [];
-// 			$.each(r.message, function (k, val) {
-// 				// $.each(frm.doc.items, function (k, item) {
-// 					let r_dict = {
-// 						'item_code': val.item_code,
-// 						'quantity': val.reserved_quantity,
-// 						// 'warehouse':val.warehouse,
-// 						'sales_order':val.name,
-// 						'child_name': val.child_name,
-// 						'reserved' : val.reserved_quantity,
-
-// 					};
-// 					d.fields_dict.items.df.data.push(r_dict);
-// 					d.fields_dict.items.grid.refresh();
-// 				// })
-// 				})
-// 			} else {
-// 				d.fields_dict.items.df.data = [];
-// 				d.fields_dict.items.grid.refresh();
-// 			}
-// 			}
-// 		});
-// 	};
-
-
 	var fetch_sales_order = function (frm, d) {
 		frappe.call({
 		method: "stock_freezing.events.sales_order.get_sales_order_items",

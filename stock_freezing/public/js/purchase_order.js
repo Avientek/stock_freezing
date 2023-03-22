@@ -3,7 +3,7 @@ frappe.ui.form.on('Purchase Order', {
 		frm.add_custom_button(__('Sales Order'),
 			function () {
 				erpnext.utils.map_current_doc({
-					method: "stock_freezing.events.stock_entry.get_sales_orders",
+					method: "stock_freezing.events.purchase_order.get_sales_orders",
 					source_doctype: "Sales Order",
 					target: me.frm,
 					setters: {
