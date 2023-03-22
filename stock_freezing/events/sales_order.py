@@ -64,7 +64,7 @@ def unfreeze(docname, doctype, dialog_items):
 
 
 @frappe.whitelist()
-def get_sales_order_items(customer,items,company):
+def get_sales_order_items(customer, items, company):
 	item_list=json.loads(items)
 	item_list_1  = []
 	for i in item_list:
@@ -94,7 +94,7 @@ def get_sales_order_items(customer,items,company):
 	return data
 
 @frappe.whitelist()
-def get_sales_order_items_wo_customer(items,company):
+def get_sales_order_items(items, company, customer=None):
 	item_list=json.loads(items)
 	item_list_1  = []
 	for i in item_list:
@@ -120,5 +120,7 @@ def get_sales_order_items_wo_customer(items,company):
 			so.company = "{company}" AND sot.item_code in ({item_list_new}) AND
 			sot.qty - sot.delivered_qty - reserved_quantity > 0
 	'''
+	if customer:
+		query += f'''AND so.customer = "{customer}"'''
 	data = frappe.db.sql(f"{query}", as_dict=True)
 	return data
