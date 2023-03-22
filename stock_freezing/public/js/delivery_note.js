@@ -47,9 +47,6 @@ frappe.ui.form.on('Delivery Note',{
 			if (doc.reserved_quantity > 0){
 			return "purple";
 		}
-		// else if ((doc.mrp ? doc.mrp : 0) == doc.last_mrp){
-		// 	return "light-grey";
-		// }
 		 else {
 			return "green";
 		}

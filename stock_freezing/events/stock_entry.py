@@ -1,4 +1,5 @@
 import frappe
+from frappe.model.mapper import get_mapped_doc
 
 
 def on_submit(self, method):
@@ -43,4 +44,29 @@ def on_submit(self, method):
 	# 				if reserved_qty >= 0:
 	# 					update_reserved_qty = i.qty + reserved_qty
 	# 					frappe.db.set_value('Sales Order Item', i.sales_order_item, 'reserved_quantity', update_reserved_qty)
+
+
+@frappe.whitelist()
+def get_sales_orders(source_name, target_doc=None, args=None):
+	target_doc = get_mapped_doc(
+		"Sales Order",
+		source_name,
+		{
+			"Sales Order": {
+				"doctype": "Purchase Order",
+			"field_no_map": ["inter_company_order_reference"],
+			},
+			"Sales Order Item": {
+				"doctype": "Purchase Order Item",
+				"field_map": [
+					["name", "sales_order_item"],
+					["parent", "sales_order"],
+				],
+			},
+		},
+		target_doc,
+		# postprocess,
+	)
+
+	return target_doc
 

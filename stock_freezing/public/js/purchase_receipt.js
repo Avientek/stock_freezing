@@ -5,7 +5,6 @@ frappe.ui.form.on('Purchase Receipt', {
 			let show_freeze_btn = false;
 			let show_freeze_wo_so_btn = false;
 			$.each(frm.doc.items, function (k, item) {
-				console.log(item.reserved_quantity, item.qty)
 				if (item.qty > item.reserved_quantity) {
 					if (item.sales_order) {
 					show_freeze_btn = true;
@@ -20,7 +19,6 @@ frappe.ui.form.on('Purchase Receipt', {
 				}, __('Reserve'));
 			}
 			if (show_freeze_wo_so_btn) {
-				console.log(44444)
 				frm.add_custom_button(__("Freeze"),function (){
 					freeze_without_so(frm);
 				}, __('Reserve'));
