@@ -173,13 +173,48 @@ frappe.ui.form.on('Purchase Receipt', {
 	}
 })
 
-var fetch_sales_order = function (customer, frm, d) {
+// var fetch_sales_order = function (customer, frm, d) {
+// 		frappe.call({
+// 		method: "stock_freezing.events.sales_order.get_sales_order_items",
+// 		args: {
+// 		customer: customer,
+// 		items: frm.doc.items,
+// 		company: frm.doc.company
+// 		},
+// 		callback: function(r) {
+// 		if (r.message && r.message.length > 0){
+// 			d.fields_dict.items.df.data = [];
+// 			$.each(r.message, function (k, val) {
+// 				// $.each(frm.doc.items, function (k, item) {
+// 					let r_dict = {
+// 						'item_code': val.item_code,
+// 						'quantity': val.reserved_quantity,
+// 						// 'warehouse':val.warehouse,
+// 						'sales_order':val.name,
+// 						'child_name': val.child_name,
+// 						'reserved' : val.reserved_quantity,
+
+// 					};
+// 					d.fields_dict.items.df.data.push(r_dict);
+// 					d.fields_dict.items.grid.refresh();
+// 				// })
+// 				})
+// 			} else {
+// 				d.fields_dict.items.df.data = [];
+// 				d.fields_dict.items.grid.refresh();
+// 			}
+// 			}
+// 		});
+// 	};
+
+
+	var fetch_sales_order = function (frm, d) {
 		frappe.call({
 		method: "stock_freezing.events.sales_order.get_sales_order_items",
 		args: {
-		customer: customer,
 		items: frm.doc.items,
-		company: frm.doc.company
+		company: frm.doc.company,
+		customer: d.get_value('customer') ? d.get_value('customer') : "",
 		},
 		callback: function(r) {
 		if (r.message && r.message.length > 0){
@@ -206,61 +241,6 @@ var fetch_sales_order = function (customer, frm, d) {
 			}
 		});
 	};
-
-
-	var fetch_sales_order_wo_customer = function (frm, d) {
-		frappe.call({
-		method: "stock_freezing.events.sales_order.get_sales_order_items_wo_customer",
-		args: {
-		items: frm.doc.items,
-		company: frm.doc.company
-		},
-		callback: function(r) {
-		if (r.message && r.message.length > 0){
-			d.fields_dict.items.df.data = [];
-			$.each(r.message, function (k, val) {
-				// $.each(frm.doc.items, function (k, item) {
-					let r_dict = {
-						'item_code': val.item_code,
-						'quantity': val.reserved_quantity,
-						// 'warehouse':val.warehouse,
-						'sales_order':val.name,
-						'child_name': val.child_name,
-						'reserved' : val.reserved_quantity,
-
-					};
-					d.fields_dict.items.df.data.push(r_dict);
-					d.fields_dict.items.grid.refresh();
-				// })
-				})
-			} else {
-				d.fields_dict.items.df.data = [];
-				d.fields_dict.items.grid.refresh();
-			}
-			}
-		});
-	};
-
-	// var set_available_qty = function (item_code, warehouse, d, items) {
-	// 	let k = 0
-	// 		frappe.call({
-	// 		method: "erpnext.stock.get_item_details.get_bin_details",
-	// 		args: {
-	// 		warehouse: warehouse,
-	// 		item_code: item_code
-	// 		},
-	// 		callback: function(r) {
-	// 		if (r.message){
-	// 			if (r.message.actual_qty) {
-	// 				// k = r.message.actual_qty
-	// 				// return k
-	// 				items.available_qty = r.message.actual_qty
-	// 				d.fields_dict.items.grid.refresh();
-	// 			}
-	// 		}
-	// 		}
-	// 	});
-	// };
 
 var freeze_without_so = function(frm) {
 	let selected_customer = '';
@@ -335,7 +315,7 @@ var freeze_without_so = function(frm) {
 						fieldname: 'sales_order',
 						fieldtype: 'Link',
 						read_only:1,
-						columns:2,
+						columns:3,
 						options:'Sales Order',
 						in_list_view: true
 					},
@@ -391,12 +371,16 @@ var freeze_without_so = function(frm) {
 		}
 	});
 
-	fetch_sales_order_wo_customer(frm, d)
+	fetch_sales_order(frm, d)
 
 	d.fields_dict['customer'].df.onchange = () => {
-		if (d.get_value('customer') && d.get_value('customer') != selected_customer) {
-			fetch_sales_order(d.get_value('customer'), frm, d)
+		if (d.get_value('customer')){
+			if ( d.get_value('customer') != selected_customer) {
+				fetch_sales_order(frm, d)
 			selected_customer = d.get_value('customer');
+			}
+		} else {
+			fetch_sales_order(frm, d)
 		}
 	}
 	d.fields_dict.items.grid.refresh();
@@ -438,18 +422,18 @@ var freeze = function(frm) {
 					}
 					},
 					{
-						label: 'Warehouse',
-						fieldname: 'warehouse',
+						label: 'Sales Order',
+						fieldname: 'sales_order',
 						fieldtype: 'Link',
-						options:'Warehouse',
+						options:'Sales Order',
 						reqd: true,
 						read_only:1,
 						in_list_view: true,
-						columns:2
+						columns:3
 
 					},
 					{
-						label: 'Sales ref',
+						label: 'Sales Order Item',
 						fieldname: 'sales_ref',
 						fieldtype: 'Data',
 						read_only:1,
@@ -510,6 +494,7 @@ var freeze = function(frm) {
 				'item_code': item.item_code,
 				'quantity': item.qty - item.reserved_quantity,
 				'warehouse':r.message.default_reservation_warehouse,
+				'sales_order':item.sales_order,
 				'sales_ref':item.sales_order_item,
 				'child_name': item.name,
 			};
