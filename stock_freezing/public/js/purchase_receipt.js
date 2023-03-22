@@ -110,10 +110,7 @@ frappe.ui.form.on('Purchase Receipt', {
 		// 				() =>$.each(values.items, function (k, val) {
 		// 					// let stock_entry = frappe.db.get_doc('Stock Entry', null, { 'sales_order': frm.doc.name, 'stock_entry_type':'Freeze'})
 		// 					// .then(doc => {
-		// 					// console.log(doc)
 		// 					$.each(frm.doc.items, function (k, frozen) {
-		// 							console.log(val.quantity)
-		// 							console.log(frozen.qty)
 		// 							if(val.child_name == frozen.name){
 		// 								if(val.quantity > frozen.reserved_quantity){
 		// 								frappe.throw("Entered Quantity should not be greater than frozen Quantity");
@@ -181,6 +178,40 @@ var fetch_sales_order = function (customer, frm, d) {
 		method: "stock_freezing.events.sales_order.get_sales_order_items",
 		args: {
 		customer: customer,
+		items: frm.doc.items,
+		company: frm.doc.company
+		},
+		callback: function(r) {
+		if (r.message && r.message.length > 0){
+			d.fields_dict.items.df.data = [];
+			$.each(r.message, function (k, val) {
+				// $.each(frm.doc.items, function (k, item) {
+					let r_dict = {
+						'item_code': val.item_code,
+						'quantity': val.reserved_quantity,
+						// 'warehouse':val.warehouse,
+						'sales_order':val.name,
+						'child_name': val.child_name,
+						'reserved' : val.reserved_quantity,
+
+					};
+					d.fields_dict.items.df.data.push(r_dict);
+					d.fields_dict.items.grid.refresh();
+				// })
+				})
+			} else {
+				d.fields_dict.items.df.data = [];
+				d.fields_dict.items.grid.refresh();
+			}
+			}
+		});
+	};
+
+
+	var fetch_sales_order_wo_customer = function (frm, d) {
+		frappe.call({
+		method: "stock_freezing.events.sales_order.get_sales_order_items_wo_customer",
+		args: {
 		items: frm.doc.items,
 		company: frm.doc.company
 		},
@@ -287,7 +318,6 @@ var freeze_without_so = function(frm) {
 						// 	// 	d.fields_dict.items.grid.refresh();
 						// 	// });
 						// 	d.fields_dict.items.df.data.some(items => {
-						// 		// console.log(items.quantity)
 						// 		set_available_qty(items.item_code, items.warehouse, d, items)
 						// 	  });
 						// }
@@ -314,7 +344,6 @@ var freeze_without_so = function(frm) {
 						fieldname: 'reserved',
 						fieldtype: 'Data',
 						read_only:1
-						// in_list_view: true
 					},
 					{
 						label: 'Child Name',
@@ -361,23 +390,8 @@ var freeze_without_so = function(frm) {
 			d.hide();
 		}
 	});
-	// $.each(frm.doc.items, function (k, item) {
 
-		// if ((item.qty - item.reserved_quantity) > 0){
-		// 	frappe.db.get_single_value('Stock Settings', 'default_reservation_warehouse')
-		// 		.then(default_reservation_warehouse => {
-		// 	let sl_no_dict = {
-		// 		// 'item_code': item.item_code,
-		// 		// 'quantity': item.qty - item.reserved_quantity,
-		// 		// 'warehouse':default_reservation_warehouse,
-		// 		// 'sales_ref':item.sales_order_item,
-		// 		// 'child_name': item.name
-		// 	};
-		// 	d.fields_dict.items.df.data.push(sl_no_dict);
-		// 	d.fields_dict.items.grid.refresh();
-		// })
-		// }
-	// });
+	fetch_sales_order_wo_customer(frm, d)
 
 	d.fields_dict['customer'].df.onchange = () => {
 		if (d.get_value('customer') && d.get_value('customer') != selected_customer) {

@@ -92,3 +92,33 @@ def get_sales_order_items(customer,items,company):
 	'''
 	data = frappe.db.sql(f"{query}", as_dict=True)
 	return data
+
+@frappe.whitelist()
+def get_sales_order_items_wo_customer(items,company):
+	item_list=json.loads(items)
+	item_list_1  = []
+	for i in item_list:
+		item_code = i.get('item_code')
+		item_list_1.append(i.get('item_code'))
+	item_list_new = [frappe.db.escape(i) for i in item_list_1]
+	item_list_new = ", ".join(item_list_new)
+	query = f'''
+		SELECT
+			so.name as name,
+			sot.item_code as item_code,
+			sot.qty-sot.reserved_quantity as reserved_quantity,
+			sot.name as child_name,
+			sot.warehouse as warehouse
+
+		FROM
+			`tabSales Order` AS so LEFT JOIN
+			`tabSales Order Item` AS sot ON
+			sot.parent = so.name
+
+		WHERE
+			so.docstatus=1 AND
+			so.company = "{company}" AND sot.item_code in ({item_list_new}) AND
+			sot.qty - sot.delivered_qty - reserved_quantity > 0
+	'''
+	data = frappe.db.sql(f"{query}", as_dict=True)
+	return data
