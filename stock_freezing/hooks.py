@@ -122,12 +122,8 @@ doc_events = {
 		"validate":"stock_freezing.events.purchase_receipt.validate"
 	},
 	"Stock Entry": {
-		# "on_cancel": "stock_freezing.events.stock_entry.on_cancel",
 		"on_submit": "stock_freezing.events.stock_entry.on_submit"
 	},
-	# "Item": {
-	# 	"validate": "avientek.events.item.validate_brand_pn"
-	# }
 }
 
 # Scheduled Tasks
