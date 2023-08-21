@@ -10,7 +10,7 @@ def get_sales_orders(source_name, target_doc=None, args=None):
 		{
 			"Sales Order": {
 				"doctype": "Purchase Order",
-				"field_no_map": ["inter_company_order_reference"],
+				"field_no_map": ["inter_company_order_reference", "shipping_address"],
 			},
 			"Sales Order Item": {
 				"doctype": "Purchase Order Item",
