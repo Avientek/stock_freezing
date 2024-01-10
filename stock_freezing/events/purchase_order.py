@@ -9,7 +9,7 @@ def get_sales_orders(source_name, target_doc=None, args=None):
 		target.qty = flt(obj.qty) - flt(obj.ordered_qty)
 
 	def condition(doc):
-		return abs(doc.qty)- abs(doc.ordered_qty) > 0
+		return abs(doc.qty) - abs(doc.ordered_qty) > 0
 
 
 	target_doc = get_mapped_doc(
