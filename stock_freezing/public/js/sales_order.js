@@ -1,4 +1,3 @@
-
 frappe.ui.form.on('Sales Order', {
 	refresh: function(frm) {
 		if (frm.doc.docstatus == 1) {
@@ -78,24 +77,44 @@ frappe.ui.form.on('Sales Order', {
 
 })
 
+// var set_available_qty = function (item_code, warehouse, d, items) {
+// 	let k = 0
+// 	frappe.call({
+// 		method: "erpnext.stock.get_item_details.get_bin_details",
+// 		args: {
+// 			warehouse: warehouse,
+// 			item_code: item_code
+// 		},
+// 		callback: function (r) {
+// 			if (r.message) {
+// 				if (r.message.actual_qty) {
+// 					items.available_qty = r.message.actual_qty
+// 					d.fields_dict.items.grid.refresh();
+// 				}
+// 			}
+// 		}
+// 	});
+// };
 var set_available_qty = function (item_code, warehouse, d, items) {
-	let k = 0
-	frappe.call({
-		method: "erpnext.stock.get_item_details.get_bin_details",
-		args: {
-			warehouse: warehouse,
-			item_code: item_code
-		},
-		callback: function (r) {
-			if (r.message) {
-				if (r.message.actual_qty) {
-					items.available_qty = r.message.actual_qty
-					d.fields_dict.items.grid.refresh();
-				}
-			}
-		}
-	});
+    frappe.call({
+        method: "erpnext.stock.get_item_details.get_bin_details",
+        args: {
+            warehouse: warehouse,
+            item_code: item_code
+        },
+        callback: function (r) {
+            var available_qty = r.message && r.message.actual_qty ? r.message.actual_qty : 0;
+            // Update the available quantity for the item
+            var itemIndex = d.fields_dict.items.df.data.findIndex(item => item.item_code === item_code);
+            if (itemIndex !== -1) {
+                d.fields_dict.items.df.data[itemIndex].available_qty = available_qty;
+                d.fields_dict.items.grid.refresh();
+            }
+        }
+    });
 };
+	 
+
 
 var freeze = function(frm) {
 	let d = new frappe.ui.Dialog({
@@ -136,7 +155,7 @@ var freeze = function(frm) {
 						fieldtype: 'Link',
 						reqd: true,
 						columns: 3,
-						read_only: 1,
+						// read_only: 1,
 						options: 'Warehouse',
 						in_list_view: true,
 						onchange: () => {
@@ -202,14 +221,16 @@ var freeze = function(frm) {
 							frm.refresh_field("items");
 						}
 					}
+					
 				})
+				
 			]);
 			d.hide();
 		}
 	});
 	$.each(frm.doc.items, function (k, item) {
 		let sl_no_dict = {}
-		console.log(item.qty, item.reserved_quantity, item.qty > item.reserved_quantity)
+		// console.log(item.qty, item.reserved_quantity, item.qty > item.reserved_quantity)
 		if (item.qty > item.delivered_qty && item.qty > item.reserved_quantity) {
 			let sl_no_dict = {
 				'item_code': item.item_code,
@@ -271,6 +292,15 @@ let unfreeze = function(frm) {
 						in_list_view: true
 					},
 					{
+                        label: 'To Warehouse',
+                        fieldname: 'to_warehouse',
+                        fieldtype: 'Link',
+                        options: 'Warehouse',
+                        reqd: true,
+						in_list_view: true,
+						read_only:1
+                    },
+					{
 						label: 'Child Name',
 						fieldname: 'child_name',
 						fieldtype: 'Data',
@@ -290,6 +320,8 @@ let unfreeze = function(frm) {
 		],
 		primary_action_label: 'Unfreeze',
 		primary_action(values) {
+		
+
 			frappe.run_serially([
 				() => $.each(values.items, function (k, val) {
 					// let stock_entry = frappe.db.get_doc('Stock Entry', null, { 'sales_order': frm.doc.name, 'stock_entry_type':'Freeze'})
@@ -324,26 +356,61 @@ let unfreeze = function(frm) {
 
 	// let stock_entry = frappe.db.get_doc('Stock Entry', null, { 'sales_order': frm.doc.name, 'stock_entry_type':'Freeze'})
 	// .then(doc => {
-	$.each(frm.doc.items, function (k, val) {
-		if (val.reserved_quantity > 0 && val.qty != val.delivered_qty) {
+
+	
+		if (frm.doc.items[0].reserved_quantity > 0 && frm.doc.items[0].qty != frm.doc.items[0].delivered_qty) {
 			frappe.db.get_value('Company', frm.doc.company, 'default_reservation_warehouse')
 				.then(r => {
-					if (r.message.default_reservation_warehouse) {
-						let sl_no_dict = {
-							'item_code': val.item_code,
-							'quantity': val.reserved_quantity,
-							'warehouse': r.message.default_reservation_warehouse,
-							'child_name': val.name,
-							'unfreeze': val.reserved_quantity,
-						};
-						d.fields_dict.items.df.data.push(sl_no_dict);
-						d.fields_dict.items.grid.refresh();
-					}
+					frappe.call({
+						'method': 'stock_freezing.events.sales_order.get_warehouse',
+						'args': {
+						'docname': frm.doc.name,
+					},
+					callback: function (response) {
+						if (r.message.default_reservation_warehouse) {
+						$.each(response.message,function (k, msg) {
+							let sl_no_dict = {
+								'item_code': msg.item_code,
+								'quantity': msg.quantity,
+								'warehouse': r.message.default_reservation_warehouse,
+								'to_warehouse':msg.warehouse,
+								'child_name': frm.doc.items[0].name,
+								'unfreeze': frm.doc.items[0].reserved_quantity,
+							};
+							d.fields_dict.items.df.data.push(sl_no_dict);
+							d.fields_dict.items.grid.refresh();
+							console.log(msg)
+						})
+							
+						}
+						}
+					})
+					
 				})
 		}
 		d.show();
 		d.show();
-	})
+	
+	// $.each(frm.doc.items, function (k, val) {
+	// 	if (val.reserved_quantity > 0 && val.qty != val.delivered_qty) {
+	// 		frappe.db.get_value('Company', frm.doc.company, 'default_reservation_warehouse')
+	// 			.then(r => {
+	// 				if (r.message.default_reservation_warehouse) {
+	// 					let sl_no_dict = {
+	// 						'item_code': val.item_code,
+	// 						'quantity': val.reserved_quantity,
+	// 						'warehouse': r.message.default_reservation_warehouse,
+	// 						'child_name': val.name,
+	// 						'unfreeze': val.reserved_quantity,
+	// 					};
+	// 					d.fields_dict.items.df.data.push(sl_no_dict);
+	// 					d.fields_dict.items.grid.refresh();
+	// 				}
+	// 			})
+	// 	}
+	// 	d.show();
+	// 	d.show();
+	// })
 
 	// });
 	// d.fields_dict.items.grid.refresh();
