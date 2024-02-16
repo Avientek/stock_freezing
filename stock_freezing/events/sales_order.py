@@ -21,6 +21,55 @@ def freeze(docname, doctype, dialog_items):
 		"stock_entry_type":"Freeze",
 		"sales_order":docname
 	})
+	# if frappe.db.exists("Frozen Stocks", {"sales_order":docname}):
+	# 	frozen_stock = frappe.get_doc("Frozen Stocks",docname)
+	# 	for item in item_details:
+	# 		frozen_stock.append("item", {
+	# 			"item_code": item.get("item_code"),
+	# 			"quantity":item.get("quantity"),
+	# 			"warehouse":item.get('warehouse')
+	# 		})
+			
+	# else:
+	# 	frozen_stock=frappe.get_doc({
+	# 		"doctype": "Frozen Stocks",
+	# 		"sales_order":docname
+	# 	})
+	# 	for item in item_details:
+	# 		frozen_stock.append("item", {
+	# 			"item_code": item.get("item_code"),
+	# 			"quantity":item.get("quantity"),
+	# 			"warehouse":item.get('warehouse')
+	# 		})
+
+	if frappe.db.exists("Frozen Stocks", {"sales_order": docname}):
+		frozen_stock = frappe.get_doc("Frozen Stocks", docname)
+		for item in item_details:
+			found = False
+			for stock_item in frozen_stock.item:
+				if item.get("item_code") == stock_item.item_code and item.get("warehouse") == stock_item.warehouse:
+					stock_item.quantity += float(item.get("quantity"))
+					found = True
+					break
+			if not found:
+				frozen_stock.append("item", {
+					"item_code": item.get("item_code"),
+					"quantity": item.get("quantity"),
+					"warehouse": item.get('warehouse')
+				})
+
+	else:
+		frozen_stock = frappe.get_doc({
+			"doctype": "Frozen Stocks",
+			"sales_order": docname
+		})
+		for item in item_details:
+			frozen_stock.append("item", {
+				"item_code": item.get("item_code"),
+				"quantity": item.get("quantity"),
+				"warehouse": item.get('warehouse')
+			})
+
 	for item in item_details:
 		stock.append("items", {
 			"item_code": item.get("item_code"),
@@ -34,7 +83,11 @@ def freeze(docname, doctype, dialog_items):
 			"sales_order":docname,
 			"sales_order_item":item.get("child_name")
 		})
+
+	
 	stock.insert().submit()
+	frozen_stock.save()
+	# return item_details
 
 
 @frappe.whitelist()
@@ -48,19 +101,37 @@ def unfreeze(docname, doctype, dialog_items):
 		'stock_entry_type':'Unfreeze',
 		'sales_order':docname,
 		'from_warehouse':reserve_warehouse,
-		'to_warehouse':doc.set_warehouse
+		# 'to_warehouse':doc.set_warehouse
 		})
+	if frappe.db.exists("Frozen Stocks", {"sales_order": docname}):
+		frozen_stock = frappe.get_doc("Frozen Stocks", docname)
+		for item in unfreeze_items:
+			print(item)
+			for stock_item in frozen_stock.item:
+				print(stock_item)
+				if item.get("item_code") == stock_item.item_code and item.get("to_warehouse") == stock_item.warehouse:
+					print(item.get("item_code") ,stock_item.item_code ,item.get("to_warehouse"),stock_item.warehouse,11111)
+					stock_item.quantity -= float(item.get("quantity"))
+					stock_item.save()
+
 	for item in unfreeze_items:
 		new_stock.append('items', {
 			"item_code": item.get('item_code'),
 			"qty":item.get('quantity'),
 			"s_warehouse":item.get('warehouse'),
-			"t_warehouse": frappe.db.get_value('Sales Order Item', {'name': item.get('child_name')}, ["warehouse"]),
+			# "t_warehouse": frappe.db.get_value('Sales Order Item', {'name': item.get('child_name')}, ["warehouse"]),
+			"t_warehouse": item.get('to_warehouse'),
 			"allow_zero_valuation_rate":1,
 			"sales_order":docname,
 			"sales_order_item":item.get('child_name')
 		})
 	new_stock.insert().submit()
+
+
+@frappe.whitelist()
+def get_warehouse(docname):
+    frozen_stocks = frappe.get_doc("Frozen Stocks", {"sales_order": docname})
+    return frozen_stocks.item
 
 
 @frappe.whitelist()

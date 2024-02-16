@@ -11,4 +11,4 @@ def validate(self,method):
 				if item.reserved_quantity > 0:
 					if r_warehouse:
 						item.warehouse = r_warehouse
-						item.qty = item.reserved_quantity
+						# item.qty = item.reserved_quantity
