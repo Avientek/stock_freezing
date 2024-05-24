@@ -31,5 +31,50 @@ frappe.ui.form.on('Purchase Invoice', {
 				}}
 			  )
 	}})
-		}
+		},
+	
+		refresh: function(frm){
+			frm.set_query('rejected_warehouse', 'items', function (doc, cdt, cdn) {
+				let row = locals[cdt][cdn];
+				return {
+					"filters": [
+						["company", "=",frm.doc.company],
+						["custom_is_reserved_warehouse","=",0],
+						['is_group', '=', 'No']
+					]
+				}
+			}
+			)
+			frm.set_query('warehouse', 'items', function (doc, cdt, cdn) {
+				let row = locals[cdt][cdn];
+				return {
+					"filters": [
+						["company", "=",frm.doc.company],
+						["custom_is_reserved_warehouse","=",0],
+						['is_group', '=', 'No']
+					]
+				}
+			}
+			),
+
+
+			frm.set_query('set_warehouse', function () {
+				return {
+					"filters": [
+						['company', '=', frm.doc.company],
+						['custom_is_reserved_warehouse', '=', 0],
+						['is_group', '=', 'No']
+					]
+				}
+			})
+			frm.set_query('rejected_warehouse', function () {
+				return {
+					"filters": [
+						['company', '=', frm.doc.company],
+						['custom_is_reserved_warehouse', '=', 0],
+						['is_group', '=', 'No']
+					]
+				}
+			})
+			}
 	})

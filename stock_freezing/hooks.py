@@ -38,6 +38,10 @@ doctype_js = {
 	"Sales Invoice": "public/js/sales_invoice.js",
 	"Stock Entry": "public/js/stock_entry.js",
     "Company": "public/js/company.js",
+    "Warehouse": "public/js/warehouse.js",
+    "BOM" : "public/js/bom.js",
+    "Work Order" : "public/js/work_order.js",
+    "Job Card" : "public/js/job_card.js"
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -224,6 +228,9 @@ fixtures = [
 		'Stock Entry Detail-sales_order',
 		'Stock Entry Detail-sales_order_item',
         'Stock Entry Detail-avientek_pr_item',
+        'Warehouse-custom_reservation_warehouse',
+        'Warehouse-custom_is_reservation_warehouse',
+        'Warehouse-custom_is_reserved_warehouse',
 ]
 	  ]]
 	},
@@ -232,5 +239,6 @@ fixtures = [
 	  },
 	{"dt":"Stock Entry Type",
 	  "filters": [["name", "in", ["Freeze", "Unfreeze"]]]
-	}
+	},
+   
 			]
