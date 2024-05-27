@@ -38,6 +38,7 @@ frappe.ui.form.on('Delivery Note',{
 					d.amount = d.qty*d.rate
 					d.against_sales_order = val.against_sales_order
 					d.so_detail = val.so_detail
+					d.actual_quantity = val.actual_quantity
 				}
 		})
 	}})
@@ -51,5 +52,60 @@ frappe.ui.form.on('Delivery Note',{
 			return "green";
 		}
 		});
+
+		frm.set_query('warehouse', 'items', function (doc, cdt, cdn) {
+			let row = locals[cdt][cdn];
+			return {
+				"filters": [
+					["company", "=",frm.doc.company],
+					["custom_is_reserved_warehouse","=",0],
+					['is_group', '=', 'No']
+				]
+			}
+		}
+		)
+		frm.set_query('set_warehouse', function () {
+			return {
+				"filters": [
+					['company', '=', frm.doc.company],
+					['custom_is_reserved_warehouse', '=', 0],
+					['is_group', '=', 'No']
+				]
+			}
+		})
+		frm.set_query('set_target_warehouse', function () {
+			return {
+				"filters": [
+					['company', '=', frm.doc.company],
+					['custom_is_reserved_warehouse', '=', 0],
+					['is_group', '=', 'No']
+				]
+			}
+		})
+
 	},
+	// company: function(frm) {
+    //     // Call the Python function to get filtered warehouses
+    //     frappe.call({
+    //         method: 'stock_freezing.events.warehouse.get_filtered_warehouses',
+	// 		args:{
+	// 			"company" : frm.doc.company
+	// 		},
+    //         callback: function(response) {
+    //             if (response.message) {
+	// 				console.log(response.message, 1111111111)
+    //                 // Set the query for your warehouse field
+    //                 frm.set_query('set_warehouse', function() {
+    //                     return {
+    //                         filters: [
+    //                             ['Warehouse', 'name', 'in', response.message],
+	// 							['Warehouse', 'company', '=', frm.doc.company]
+    //                         ],
+	// 						page_length:50
+    //                     };
+    //                 });
+    //             }
+    //         }
+    //     });
+    // }
 })

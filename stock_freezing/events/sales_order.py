@@ -12,11 +12,13 @@ def validate(self,method):
 def freeze(docname, doctype, dialog_items):
 	doc=frappe.get_doc(doctype, docname)
 	d_data=json.loads(dialog_items)
-	reserve_warehouse = frappe.db.get_value("Company", doc.company, "default_reservation_warehouse")
+	# parent = frappe.db.get_value("Warehouse",{"company":doc.company,"name":doc.set_warehouse},"parent_warehouse")
+	reserve_warehouse = frappe.db.get_value("Warehouse",doc.set_warehouse, "custom_reservation_warehouse")
 	item_details=d_data["items"]
 	stock=frappe.get_doc({
 		"doctype": "Stock Entry",
 		"from_warehouse": doc.set_warehouse,
+		"company":doc.company,
 		"to_warehouse":reserve_warehouse,
 		"stock_entry_type":"Freeze",
 		"sales_order":docname
@@ -55,7 +57,8 @@ def freeze(docname, doctype, dialog_items):
 				frozen_stock.append("item", {
 					"item_code": item.get("item_code"),
 					"quantity": item.get("quantity"),
-					"warehouse": item.get('warehouse')
+					"warehouse": item.get('warehouse'),
+					"to_warehouse":item.get("to_warehouse")
 				})
 
 	else:
@@ -67,7 +70,8 @@ def freeze(docname, doctype, dialog_items):
 			frozen_stock.append("item", {
 				"item_code": item.get("item_code"),
 				"quantity": item.get("quantity"),
-				"warehouse": item.get('warehouse')
+				"warehouse": item.get('warehouse'),
+				"to_warehouse":item.get("to_warehouse")
 			})
 
 	for item in item_details:
@@ -75,7 +79,7 @@ def freeze(docname, doctype, dialog_items):
 			"item_code": item.get("item_code"),
 			"qty":item.get("quantity"),
 			"conversion_factor":1,
-			"t_warehouse":reserve_warehouse,
+			"t_warehouse":item.get("to_warehouse"),
 			"allow_zero_valuation_rate":1,
 			"basic_rate":item.get("rate"),
 			"s_warehouse":item.get("warehouse"),
@@ -95,22 +99,20 @@ def unfreeze(docname, doctype, dialog_items):
 	doc=frappe.get_doc(doctype, docname)
 	unfreeze_dict = json.loads(dialog_items)
 	unfreeze_items = unfreeze_dict['items']
-	reserve_warehouse=frappe.db.get_value('Company', doc.company, 'default_reservation_warehouse')
+	# reserve_warehouse=frappe.db.get_value('Company', doc.company, 'default_reservation_warehouse')
 	new_stock=frappe.get_doc({
 		'doctype': 'Stock Entry',
 		'stock_entry_type':'Unfreeze',
+		'company':doc.company,
 		'sales_order':docname,
-		'from_warehouse':reserve_warehouse,
+		# 'from_warehouse':reserve_warehouse,
 		# 'to_warehouse':doc.set_warehouse
 		})
 	if frappe.db.exists("Frozen Stocks", {"sales_order": docname}):
 		frozen_stock = frappe.get_doc("Frozen Stocks", docname)
 		for item in unfreeze_items:
-			print(item)
 			for stock_item in frozen_stock.item:
-				print(stock_item)
 				if item.get("item_code") == stock_item.item_code and item.get("to_warehouse") == stock_item.warehouse:
-					print(item.get("item_code") ,stock_item.item_code ,item.get("to_warehouse"),stock_item.warehouse,11111)
 					stock_item.quantity -= float(item.get("quantity"))
 					stock_item.save()
 

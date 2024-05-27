@@ -23,7 +23,7 @@ frappe.ui.form.on('Purchase Receipt', {
 					freeze_without_so(frm);
 				}, __('Reserve'));
 			}
-		}
+		}	
 	},
 	onload:function(frm){
 	// 	$.each(frm.doc.items, function (k, val) {
@@ -31,29 +31,71 @@ frappe.ui.form.on('Purchase Receipt', {
 	// 			frm.set_value('from_so', '1')
 	// 		}
 	// 	})
-	frappe.db.get_value('Company', frm.doc.company, 'default_reservation_warehouse')
-	.then(r => {
-	if(r.message.default_reservation_warehouse){
-			frm.set_query('set_warehouse', function(doc) {
-				return {
-				  "filters": [
-					['company', '=', frm.doc.company],
-					['name', '!=', r.message.default_reservation_warehouse],
-					['is_group', '=', 'No']
-				  ]
-				}
-			  })
-			  frm.set_query('warehouse', 'items', function(doc,cdt,cdn) {
-				let row = locals[cdt][cdn];
-				return {
-				  "filters": [
-					['company', '=', frm.doc.company],
-					['name', '!=', r.message.default_reservation_warehouse],
-					['is_group', '=', 'No']
-				  ]
-				}}
-			  )
-	}})
+	// frappe.db.get_value('Company', frm.doc.company, 'default_reservation_warehouse')
+	// .then(r => {
+	// if(r.message.default_reservation_warehouse){
+	// 		frm.set_query('set_warehouse', function(doc) {
+	// 			return {
+	// 			  "filters": [
+	// 				['company', '=', frm.doc.company],
+	// 				['name', '!=', r.message.default_reservation_warehouse],
+	// 				['is_group', '=', 'No']
+	// 			  ]
+	// 			}
+	// 		  })
+	// 		  frm.set_query('warehouse', 'items', function(doc,cdt,cdn) {
+	// 			let row = locals[cdt][cdn];
+	// 			return {
+	// 			  "filters": [
+	// 				['company', '=', frm.doc.company],
+	// 				['name', '!=', r.message.default_reservation_warehouse],
+	// 				['is_group', '=', 'No']
+	// 			  ]
+	// 			}}
+	// 		  )
+	// }})
+	frm.set_query('warehouse', 'items', function (doc, cdt, cdn) {
+		let row = locals[cdt][cdn];
+		return {
+			"filters": [
+				["company", "=",frm.doc.company],
+				["custom_is_reserved_warehouse","=",0],
+				['is_group', '=', 0]
+			]
+		}
+	}
+	)
+	frm.set_query('rejected_warehouse', 'items', function (doc, cdt, cdn) {
+		let row = locals[cdt][cdn];
+		return {
+			"filters": [
+				["company", "=",frm.doc.company],
+				["custom_is_reserved_warehouse","=",0],
+				['is_group', '=', 0]
+			]
+		}
+	}
+	),
+
+
+	frm.set_query('set_warehouse', function () {
+		return {
+			"filters": [
+				['company', '=', frm.doc.company],
+				['custom_is_reserved_warehouse', '=', 0],
+				['is_group', '=', 0]
+			]
+		}
+	})
+	frm.set_query('rejected_warehouse', function () {
+		return {
+			"filters": [
+				['company', '=', frm.doc.company],
+				['custom_is_reserved_warehouse', '=', 0],
+				['is_group', '=', 0]
+			]
+		}
+	})
 	
 		// if(frm.doc.docstatus==1 && frm.doc.is_frozen==1){
 
@@ -205,7 +247,7 @@ frappe.ui.form.on('Purchase Receipt', {
 			}
 			}
 		});
-	};
+	};	
 
 var freeze_without_so = function(frm) {
 	let selected_customer = '';
@@ -452,13 +494,14 @@ var freeze = function(frm) {
 	$.each(frm.doc.items, function (k, item) {
 
 		if ((item.qty - item.reserved_quantity) > 0){
-			frappe.db.get_value('Company', frm.doc.company, 'default_reservation_warehouse')
+			// frappe.db.get_value('Company', frm.doc.company, 'default_reservation_warehouse')
+			frappe.db.get_value('Warehouse', frm.doc.set_warehouse, 'custom_reservation_warehouse')
 			.then(r => {
-			if(r.message.default_reservation_warehouse){
+			if(r.message.custom_reservation_warehouse){
 			let sl_no_dict = {
 				'item_code': item.item_code,
 				'quantity': item.qty - item.reserved_quantity,
-				'warehouse':r.message.default_reservation_warehouse,
+				'warehouse':r.message.custom_reservation_warehouse,
 				'sales_order':item.sales_order,
 				'sales_ref':item.sales_order_item,
 				'child_name': item.name,

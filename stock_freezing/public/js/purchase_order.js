@@ -17,6 +17,29 @@ frappe.ui.form.on('Purchase Order', {
 					},
 				})
 			}, __("Get Items From"));
+
+			frm.set_query('warehouse', 'items', function (doc, cdt, cdn) {
+				let row = locals[cdt][cdn];
+				return {
+					"filters": [
+						["company", "=",frm.doc.company],
+						["custom_is_reserved_warehouse","=",0],
+						['is_group', '=', 'No']
+					]
+				}
+			}
+			),
+
+
+			frm.set_query('set_warehouse', function () {
+				return {
+					"filters": [
+						['company', '=', frm.doc.company],
+						['custom_is_reserved_warehouse', '=', 0],
+						['is_group', '=', 'No']
+					]
+				}
+			})
 	},
 	onload: function (frm) {
 

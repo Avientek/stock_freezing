@@ -11,12 +11,14 @@ def validate(self,method):
 def freeze_from_pr(docname, doctype, dialog_items, type):
 	doc=frappe.get_doc(doctype, docname)
 	reserved=json.loads(dialog_items)
-	reserve_warehouse=frappe.db.get_value('Company', doc.company, 'default_reservation_warehouse')
+	# reserve_warehouse=frappe.db.get_value('Company', doc.company, 'default_reservation_warehouse')
+	reserve_warehouse=frappe.db.get_value('Warehouse', doc.set_warehouse, 'custom_reservation_warehouse')
 	item_details = reserved.get('items')
 
 	stock=frappe.get_doc({
 		'doctype': 'Stock Entry',
 		'from_warehouse':doc.set_warehouse,
+		'company': doc.company,
 		'to_warehouse':reserve_warehouse,
 		'stock_entry_type':'Freeze',
 		'purchase_receipt':doc.name,
