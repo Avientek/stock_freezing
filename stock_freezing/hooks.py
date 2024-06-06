@@ -117,7 +117,9 @@ doctype_js = {
 
 doc_events = {
 	"Delivery Note": {
-		"validate":"stock_freezing.events.delivery_note.validate"
+		"validate":"stock_freezing.events.delivery_note.validate",
+		"on_submit":"stock_freezing.events.delivery_note.update_frozen_stock",
+		"on_cancel":"stock_freezing.events.delivery_note.update_frozen_stock"
 	},
 	"Sales Order": {
 		"validate":"stock_freezing.events.sales_order.validate"
@@ -126,7 +128,8 @@ doc_events = {
 		"validate":"stock_freezing.events.purchase_receipt.validate"
 	},
 	"Stock Entry": {
-		"on_submit": "stock_freezing.events.stock_entry.on_submit"
+		"on_submit": "stock_freezing.events.stock_entry.on_submit",
+		"on_cancel": "stock_freezing.events.stock_entry.on_cancel"
 	},
 }
 
@@ -231,11 +234,13 @@ fixtures = [
         'Warehouse-custom_reservation_warehouse',
         'Warehouse-custom_is_reservation_warehouse',
         'Warehouse-custom_is_reserved_warehouse',
+        'Delivery Note-custom_delivery_warehouse',
+        'Delivery Note Item-custom_frozen_stock'
 ]
 	  ]]
 	},
 	{"dt":"Property Setter",
-		"filters": [["doc_type", "in", ("Purchase Order Item")]]
+		"filters": [["doc_type", "in", ("Purchase Order Item")],['name','in',['Delivery Note-set_warehouse-hidden']]]
 	  },
 	{"dt":"Stock Entry Type",
 	  "filters": [["name", "in", ["Freeze", "Unfreeze"]]]

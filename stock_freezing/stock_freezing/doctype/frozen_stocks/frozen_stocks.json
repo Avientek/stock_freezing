@@ -8,8 +8,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "sales_order",
-  "item"
+  "sales_order"
  ],
  "fields": [
   {
@@ -17,17 +16,11 @@
    "fieldtype": "Data",
    "label": "Sales Order",
    "unique": 1
-  },
-  {
-   "fieldname": "item",
-   "fieldtype": "Table",
-   "label": "Item",
-   "options": "Frozen Stock Items"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-02-15 12:46:40.803908",
+ "modified": "2024-05-29 15:50:17.571566",
  "modified_by": "Administrator",
  "module": "Stock freezing",
  "name": "Frozen Stocks",

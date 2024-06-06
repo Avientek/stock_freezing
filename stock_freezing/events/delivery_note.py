@@ -1,58 +1,33 @@
 import frappe
-
-
-# def validate(self,method):
-# 	if self.items:
-# 		r_warehouse = frappe.db.get_value('Company', self.company, 'default_reservation_warehouse')
-# 		for item in self.items:
-# 			if item.item_code and item.reserved_quantity:
-# 				if item.qty > item.reserved_quantity:
-# 					frappe.throw("Quantity Exceeded")
-# 				if item.reserved_quantity > 0:
-# 					if r_warehouse:
-# 						item.warehouse = r_warehouse
-# 						# item.qty = item.reserved_quantity
-
-
-# def validate(self,method):
-# 	if self.items:
-# 		r_warehouse = frappe.db.get_value('Warehouse', {"company":self.company}, 'custom_reservation_warehouse')
-# 		print(r_warehouse,11111111)
-# 		for item in self.items:
-# 			if item.item_code and item.reserved_quantity:
-# 				if item.qty > item.reserved_quantity:
-# 					frappe.throw("Quantity Exceeded")
-# 				if item.reserved_quantity > 0:
-# 					if r_warehouse:
-# 						item.warehouse = r_warehouse
-# 						# item.qty = item.reserved_quantity
-# 				if not item.reserved_quantity:
-# 					if item.qty > self.total_qty - item.reserved_quantity:
-# 						frappe.throw("hiiiiii")
+from stock_freezing.stock_freezing.doctype.frozen_stock.frozen_stock import get_frozen_stock,get_frozen_qty
 
 def validate(self, method):
     if self.items:
-        r_warehouse = frappe.db.get_value('Warehouse', {"company": self.company}, 'custom_reservation_warehouse')
-        print(r_warehouse, 11111111)
-        
         for item in self.items:
-            if item.item_code:
+            if item.custom_frozen_stock:
+                fs = frappe.get_doc("Frozen Stock",item.custom_frozen_stock)
+                if item.qty > fs.quantity:
+                    frappe.throw("Quantity Exceeded for Reserved Item: {}. Reserved Qty: {}".format(item.item_code, fs.quantity))
+            else:
+                frozen_qty = get_frozen_qty(item.item_code,item.warehouse,item.against_sales_order)
                 so_item = frappe.db.get_value('Sales Order Item', {'parent': item.against_sales_order, 'item_code': item.item_code}, 
-                                              ['reserved_quantity', 'qty'], as_dict=True)
+                                              ['delivered_qty','qty'], as_dict=True)
                 if so_item:
-                    reserved_qty = so_item.reserved_quantity or 0
-                    total_qty = so_item.qty or 0
-                    unreserved_qty = total_qty - reserved_qty
+                    if item.qty  > (so_item.qty - so_item.delivered_qty - frozen_qty):
+                                frappe.throw("Quantity Exceeded for Unreserved Item: {}. Unreserved Qty: {}"
+                                             .format(item.item_code, (so_item.qty - so_item.delivered_qty - frozen_qty)))
 
-                    if item.reserved_quantity:  # This item is reserved
-                        if item.qty > reserved_qty:
-                            frappe.throw("Quantity Exceeded for Reserved Item: {}. Reserved Qty: {}, Delivered Qty: {}"
-                                         .format(item.item_code, reserved_qty, item.qty))
-                        if r_warehouse:
-                            item.warehouse = r_warehouse
-                    else:  # This item is unreserved
-                        if item.qty > unreserved_qty:
-                            frappe.throw("Quantity Exceeded for Unreserved Item: {}. Unreserved Qty: {}, Delivered Qty: {}"
-                                         .format(item.item_code, unreserved_qty, item.qty))
-                else:
-                    frappe.throw("Sales Order item not found for Item: {}".format(item.item_code))
+def update_frozen_stock(self, method):
+    if self.docstatus ==1 and self.items:
+        for item in self.items:
+            if item.custom_frozen_stock:
+                fs = frappe.get_doc("Frozen Stock",item.custom_frozen_stock)
+                fs.update_frozen_stock(0-item.qty)
+
+    elif self.docstatus ==2 and self.items:
+        for item in self.items:
+            if item.custom_frozen_stock:
+                from_warehouse = frappe.db.get_value("Warehouse",{'custom_is_reservation_warehouse':1,'custom_reservation_warehouse':item.warehouse},['name'])
+                fs = get_frozen_stock(item.item_code,from_warehouse,item.warehouse,item.against_sales_order)
+                item.custom_frozen_stock = fs.name
+                fs.update_frozen_stock(item.qty)
