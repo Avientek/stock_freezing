@@ -204,13 +204,8 @@ frappe.ui.form.on('Purchase Receipt', {
 	setup: function (frm) {
 		frm.set_indicator_formatter("item_code", (doc) => {
 			if (doc.reserved_quantity > 0){
-			return "red";
-		} 
-		// else if ((doc.mrp ? doc.mrp : 0) == doc.last_mrp){
-		// 	return "light-grey";
-		// } else { // >
-		// 	return "green";
-		// }
+				return "red";
+			} 
 		});
 	}
 })
