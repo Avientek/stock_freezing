@@ -45,5 +45,5 @@ def freeze_from_pr(docname, doctype, dialog_items, type):
 
 	if frappe.db.exists("Stock Entry",stock.name):
 		for item in item_details:
-			fs = get_frozen_stock(item.get("item_code"),reserve_warehouse,doc.set_warehouse,item.get("sales_order"))
+			fs = get_frozen_stock(item.get("item_code"),doc.set_warehouse,reserve_warehouse,item.get("sales_order"))
 			fs.update_frozen_stock(item.get("quantity"))
