@@ -141,7 +141,8 @@ var freeze = function(frm) {
 							return {
 								filters: {
 									'custom_reservation_warehouse': ['!=', ''],
-									'custom_is_reservation_warehouse' : ['=',1]
+									'custom_is_reservation_warehouse' : ['=',1],
+									'company': frm.doc.company
 								}
 							};
 						},
