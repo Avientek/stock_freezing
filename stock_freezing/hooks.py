@@ -240,7 +240,7 @@ fixtures = [
 	  ]]
 	},
 	{"dt":"Property Setter",
-		"filters": [["doc_type", "in", ("Purchase Order Item")],['name','in',['Delivery Note-set_warehouse-hidden']]]
+		"filters": [["doc_type", "in", ("Purchase Order Item")],['name','in',['Delivery Note-set_warehouse-hidden','Delivery Note Item-warehouse-read_only_depends_on']]]
 	  },
 	{"dt":"Stock Entry Type",
 	  "filters": [["name", "in", ["Freeze", "Unfreeze"]]]
