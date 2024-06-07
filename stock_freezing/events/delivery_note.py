@@ -9,8 +9,8 @@ def validate(self, method):
                 if item.qty > fs.quantity:
                     frappe.throw("Quantity Exceeded for Reserved Item: {}. Reserved Qty: {}".format(item.item_code, fs.quantity))
             else:
-                frozen_qty = get_frozen_qty(item.item_code,item.warehouse,item.against_sales_order)
-                so_item = frappe.db.get_value('Sales Order Item', {'parent': item.against_sales_order, 'item_code': item.item_code}, 
+                frozen_qty = get_frozen_qty(item.item_code,item.warehouse,item.against_sales_order,item.so_detail)
+                so_item = frappe.db.get_value('Sales Order Item', item.so_detail, 
                                               ['delivered_qty','qty'], as_dict=True)
                 if so_item:
                     if item.qty  > (so_item.qty - so_item.delivered_qty - frozen_qty):
@@ -28,6 +28,6 @@ def update_frozen_stock(self, method):
         for item in self.items:
             if item.custom_frozen_stock:
                 from_warehouse = frappe.db.get_value("Warehouse",{'custom_is_reservation_warehouse':1,'custom_reservation_warehouse':item.warehouse},['name'])
-                fs = get_frozen_stock(item.item_code,from_warehouse,item.warehouse,item.against_sales_order)
+                fs = get_frozen_stock(item.item_code,from_warehouse,item.warehouse,item.against_sales_order,item.so_detail)
                 item.custom_frozen_stock = fs.name
                 fs.update_frozen_stock(item.qty)

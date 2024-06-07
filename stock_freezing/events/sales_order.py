@@ -20,12 +20,19 @@ def freeze_unfreeze(docname, doctype,stock_entry_type, dialog_items):
 		"stock_entry_type":stock_entry_type,
 		"sales_order":docname
 	})
+
 	for item in item_details:
+		to_warehouse = item.get("to_warehouse")
+
+		if not item.get("to_warehouse"):
+			if stock_entry_type == "Freeze":
+				to_warehouse = frappe.db.get_value("Warehouse",item.get("warehouse"),['custom_reservation_warehouse'])
+
 		stock.append("items", {
 			"item_code": item.get("item_code"),
 			"qty":item.get("quantity"),
 			"conversion_factor":1,
-			"t_warehouse":item.get("to_warehouse"),
+			"t_warehouse":to_warehouse,
 			"allow_zero_valuation_rate":1,
 			"basic_rate":item.get("rate"),
 			"s_warehouse":item.get("warehouse"),
@@ -38,16 +45,22 @@ def freeze_unfreeze(docname, doctype,stock_entry_type, dialog_items):
 
 	if frappe.db.exists("Stock Entry",stock.name):
 		for item in item_details:
+			to_warehouse = item.get("to_warehouse")
+
 			if stock_entry_type == "Freeze":
-				fs = get_frozen_stock(item.get("item_code"),item.get("warehouse"),item.get("to_warehouse"),doc.name)
+				if not item.get("to_warehouse"):
+					to_warehouse = frappe.db.get_value("Warehouse",item.get("warehouse"),['custom_reservation_warehouse'])
+
+				fs = get_frozen_stock(item.get("item_code"),item.get("warehouse"),to_warehouse,doc.name,item.get("child_name"))
 				fs.update_frozen_stock(item.get("quantity"))
 			else:
-				fs = get_frozen_stock(item.get("item_code"),item.get("to_warehouse"),item.get("warehouse"),doc.name)
+				fs = get_frozen_stock(item.get("item_code"),item.get("to_warehouse"),item.get("warehouse"),doc.name,item.get("child_name"))
 				fs.update_frozen_stock(0-flt(item.get("quantity")))
 
 @frappe.whitelist()
 def get_so_frozen_data(docname):
-    frozen_stocks = frappe.get_all("Frozen Stock", {"sales_order": docname},['item_code','warehouse','from_warehouse','quantity'])
+    frozen_stocks = frappe.get_all("Frozen Stock", {"sales_order": docname},['item_code','warehouse','from_warehouse','quantity','sales_order_item'])
+    print("frozen_stock\n",frozen_stocks)
     return frozen_stocks
 
 @frappe.whitelist()

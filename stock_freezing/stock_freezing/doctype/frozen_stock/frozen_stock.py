@@ -11,10 +11,10 @@ class FrozenStock(Document):
 		if self.quantity == 0:
 			self.delete()
 
-def get_frozen_stock(item_code, from_warehouse,warehouse, sales_order):
-	fs = frappe.db.get_value("Frozen Stock", {"item_code": item_code, "warehouse": warehouse, 'from_warehouse':from_warehouse, 'sales_order': sales_order})
+def get_frozen_stock(item_code, from_warehouse,warehouse, sales_order, sales_order_item):
+	fs = frappe.db.get_value("Frozen Stock", {"item_code": item_code, "warehouse": warehouse, 'from_warehouse':from_warehouse, 'sales_order': sales_order, 'sales_order_item':sales_order_item})
 	if not fs:
-		fs_obj = frappe.get_doc(doctype="Frozen Stock", item_code=item_code, from_warehouse=from_warehouse,warehouse=warehouse,sales_order=sales_order,created_on=frappe.utils.today())
+		fs_obj = frappe.get_doc(doctype="Frozen Stock", item_code=item_code, from_warehouse=from_warehouse,warehouse=warehouse,sales_order=sales_order,sales_order_item=sales_order_item,created_on=frappe.utils.today())
 		fs_obj.flags.ignore_permissions = 1
 		fs_obj.insert()
 	else:
@@ -22,12 +22,12 @@ def get_frozen_stock(item_code, from_warehouse,warehouse, sales_order):
 	fs_obj.flags.ignore_permissions = True
 	return fs_obj
 
-def get_frozen_qty(item_code, warehouse, sales_order):
+def get_frozen_qty(item_code, warehouse, sales_order, sales_order_item):
 	frozen_qty = frappe.db.sql(
 		"""select quantity from `tabFrozen Stock`
-		where item_code = %s and warehouse = %s and sales_order = %s
+		where item_code = %s and warehouse = %s and sales_order = %s and sales_order_item = %s
 		limit 1""",
-		(item_code, warehouse, sales_order),
+		(item_code, warehouse, sales_order,sales_order_item),
 		as_dict=1,
 	)
 

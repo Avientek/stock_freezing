@@ -85,7 +85,6 @@ var set_available_qty = function (item_code, warehouse, d, items) {
             if (itemIndex !== -1) {
                 d.fields_dict.items.df.data[itemIndex].available_qty = available_qty;
                 frappe.db.get_value("Warehouse",warehouse, "custom_reservation_warehouse", function(value) {
-                	console.log("custom_reservation_warehouse",value.custom_reservation_warehouse)
                 	d.fields_dict.items.df.data[itemIndex].to_warehouse = value.custom_reservation_warehouse
 				});
                 d.fields_dict.items.grid.refresh();
@@ -196,6 +195,9 @@ var freeze = function(frm) {
 							if (val.quantity > (item.qty - item.reserved_quantity)) {
 								frappe.throw("Entered Quantity should not be greater than Ordered Quantity")
 							}
+							if(val.available_qty === 0) {
+								frappe.throw("Quantity is not available in the warehouse to freeze")
+							}
 						}
 					})
 				}),
@@ -228,6 +230,8 @@ var freeze = function(frm) {
 				'item_code': item.item_code,
 				'quantity': item.qty - item.reserved_quantity,
 				'child_name': item.name,
+				'warehouse': item.warehouse,
+				'available_qty': item.actual_qty,
 				'freeze_qty': item.qty - item.reserved_quantity
 			};
 			d.fields_dict.items.df.data.push(sl_no_dict);
@@ -314,6 +318,7 @@ let unfreeze = function(frm) {
 				() => $.each(values.items, function (k, val) {
 						$.each(frm.doc.items, function (k, frozen) {
 							if (val.child_name == frozen.name) {
+								console.log("val.child_name,val.item_code,val.quantity,frozen.item_code,frozen.reserved_quantity",val.child_name,val.item_code,val.quantity,frozen.name,frozen.reserved_quantity)
 								if (val.quantity > frozen.reserved_quantity) {
 									frappe.throw("Entered Quantity should not be greater than frozen Quantity");
 								}
@@ -350,18 +355,18 @@ let unfreeze = function(frm) {
 		let child_name;
 		$.each(response.message,function (k, msg) {
 
-				$.each(frm.doc.items,function(k,item){
-					if(item.item_code == msg.item_code){
-						child_name = item.name
-					}
-				}							
-			)
+				// $.each(frm.doc.items,function(k,item){
+				// 	if(item.name == msg.item_code){
+				// 		child_name = item.name
+				// 	}
+				// }							
+			// )
 			let sl_no_dict = {
 				'item_code': msg.item_code,
 				'quantity': msg.quantity,
 				'warehouse':msg.warehouse,
 				'to_warehouse':msg.from_warehouse,
-				'child_name': child_name,
+				'child_name': msg.sales_order_item,
 				'unfreeze': frm.doc.items.reserved_quantity,
 			};
 			d.fields_dict.items.df.data.push(sl_no_dict);

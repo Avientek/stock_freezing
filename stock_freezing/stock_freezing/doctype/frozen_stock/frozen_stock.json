@@ -7,6 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "sales_order",
+  "sales_order_item",
   "column_break_zp7ka",
   "item_code",
   "section_break_ia5pw",
@@ -83,11 +84,17 @@
   {
    "fieldname": "column_break_bvuno",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sales_order_item",
+   "fieldtype": "Data",
+   "label": "Sales Order Item",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-06-06 12:06:16.564276",
+ "modified": "2024-06-07 09:21:07.746276",
  "modified_by": "Administrator",
  "module": "Stock freezing",
  "name": "Frozen Stock",

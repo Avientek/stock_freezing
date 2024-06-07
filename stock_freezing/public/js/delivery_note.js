@@ -1,15 +1,17 @@
 frappe.ui.form.on('Delivery Note',{
 	onload:function(frm){
 		$.each(frm.doc.items, function (k, val){
-			if(val.reserved_quantity > 0 && val.reserved_quantity < val.qty){
+			if(val.reserved_quantity > 0 && val.reserved_quantity <= val.qty){
 				frappe.db.get_list('Frozen Stock', {
 	                fields: ['item_code','warehouse','quantity','name'],
 	                filters: {
 	                    item_code: val.item_code,
-	                    sales_order: val.against_sales_order
+	                    sales_order: val.against_sales_order,
+	                    sales_order_item: val.so_detail
 	                },
 	                limit:0
 		            }).then(records => {
+		            	console.log("recorsssssssss",records)
 		            	var total_reserved = 0
 		                records.forEach(rec=>{
 		                	total_reserved += rec.quantity
@@ -30,6 +32,9 @@ frappe.ui.form.on('Delivery Note',{
 			            });
 		            if(total_reserved < val.qty){
 		            	frappe.model.set_value(val.doctype, val.name, 'qty', (val.qty - total_reserved))
+			        }
+			        else if(total_reserved == val.qty) {
+			        	frm.get_field("items").grid.grid_rows[k].remove();
 			        }
 			    });
 
