@@ -1,5 +1,5 @@
 frappe.ui.form.on('Delivery Note',{
-	onload:function(frm){
+	onload_post_render:function(frm){
 		$.each(frm.doc.items, function (k, val){
 			if(val.reserved_quantity > 0 && val.reserved_quantity <= val.qty){
 				frappe.db.get_list('Frozen Stock', {
