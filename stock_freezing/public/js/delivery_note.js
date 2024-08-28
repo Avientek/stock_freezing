@@ -12,13 +12,14 @@ frappe.ui.form.on('Delivery Note',{
                     },
                     limit: 0
                 }).then(records => {
+                	console.log("records for item", val.item_code,records)
                     if (records.length > 0) {
                         let total_reserved = 0;
 
                         // Process each record in the Frozen Stock
                         records.forEach(rec => {
                             total_reserved += rec.quantity;
-
+                            console.log("frozen qty", rec.quantity)
                             // Add a new row for the frozen stock item
                             frm.add_child('items', {
                                 item_code: rec.item_code,
@@ -34,11 +35,13 @@ frappe.ui.form.on('Delivery Note',{
                                 custom_frozen_stock: rec.name
                             });
                         });
-
+                        console.log("total reserved qty and dn qty",total_reserved,val.qty)
                         // Tag the original item for removal or update its quantity
                         if (total_reserved < val.qty) {
+                        	console.log("qty changed to qty - reserved")
                             frappe.model.set_value(val.doctype, val.name, 'qty', (val.qty - total_reserved));
                         } else {
+                        	console.log("total_reserved >= dn qty:: remove")
                             // Tag the item for removal
                             val.__remove = true;
                         }
@@ -51,12 +54,15 @@ frappe.ui.form.on('Delivery Note',{
         });
 
         // Remove items tagged for deletion
-        frappe.after_ajax(() => {
-            const items = frm.doc.items.filter(item => !item.__remove);
-            frm.clear_table("items");
-            items.forEach(item => frm.add_child("items", item));
-            frm.refresh_field('items');
-        });
+        setTimeout(() => {
+	        frappe.after_ajax(() => {
+	            const items = frm.doc.items.filter(item => !item.__remove);
+	            console.log("to be kept",items)
+	            frm.clear_table("items");
+	            items.forEach(item => frm.add_child("items", item));
+	            frm.refresh_field('items');
+	        });
+	    },150)
     },
 	delivery_warehouse(frm) {
 		if (frm.doc.delivery_warehouse && frm.doc.items && frm.doc.items.length) {
