@@ -1,46 +1,63 @@
 frappe.ui.form.on('Delivery Note',{
-	onload_post_render:function(frm){
-		$.each(frm.doc.items, function (k, val){
-			if(val.reserved_quantity > 0 && val.reserved_quantity <= val.qty){
-				frappe.db.get_list('Frozen Stock', {
-	                fields: ['item_code','warehouse','quantity','name'],
-	                filters: {
-	                    item_code: val.item_code,
-	                    sales_order: val.against_sales_order,
-	                    sales_order_item: val.so_detail
-	                },
-	                limit:0
-		            }).then(records => {
-		            	console.log("recorsssssssss",records)
-		            	var total_reserved = 0
-		                records.forEach(rec=>{
-		                	total_reserved += rec.quantity
-		                    frm.add_child('items',{
-		                        item_code: rec.item_code,
-								item_name :val.item_name,
-								description :val.description,
-								uom :val.uom,
-								rate :val.rate,
-								warehouse :rec.warehouse,
-								qty :rec.quantity,
-								reserved_quantity :rec.quantity,
-								against_sales_order :val.against_sales_order,
-								so_detail :val.so_detail,
-								custom_frozen_stock:rec.name
-		                    });
-		                    frm.refresh_fields('items');
-			            });
-		            if(total_reserved < val.qty){
-		            	frappe.model.set_value(val.doctype, val.name, 'qty', (val.qty - total_reserved))
-			        }
-			        else if(total_reserved == val.qty) {
-			        	frm.get_field("items").grid.grid_rows[k].remove();
-			        }
-			    });
+    onload_post_render: function(frm) {
+        // Iterate over each item in the Delivery Note
+        $.each(frm.doc.items, function(k, val) {
+            if (val.reserved_quantity > 0 && val.reserved_quantity <= val.qty) {
+                frappe.db.get_list('Frozen Stock', {
+                    fields: ['item_code', 'warehouse', 'quantity', 'name'],
+                    filters: {
+                        item_code: val.item_code,
+                        sales_order: val.against_sales_order,
+                        sales_order_item: val.so_detail
+                    },
+                    limit: 0
+                }).then(records => {
+                    if (records.length > 0) {
+                        let total_reserved = 0;
 
-				}
-			})
-		},
+                        // Process each record in the Frozen Stock
+                        records.forEach(rec => {
+                            total_reserved += rec.quantity;
+
+                            // Add a new row for the frozen stock item
+                            frm.add_child('items', {
+                                item_code: rec.item_code,
+                                item_name: val.item_name,
+                                description: val.description,
+                                uom: val.uom,
+                                rate: val.rate,
+                                warehouse: rec.warehouse,
+                                qty: rec.quantity,
+                                reserved_quantity: rec.quantity,
+                                against_sales_order: val.against_sales_order,
+                                so_detail: val.so_detail,
+                                custom_frozen_stock: rec.name
+                            });
+                        });
+
+                        // Tag the original item for removal or update its quantity
+                        if (total_reserved < val.qty) {
+                            frappe.model.set_value(val.doctype, val.name, 'qty', (val.qty - total_reserved));
+                        } else {
+                            // Tag the item for removal
+                            val.__remove = true;
+                        }
+
+                        // Refresh fields after processing
+                        frm.refresh_field('items');
+                    }
+                });
+            }
+        });
+
+        // Remove items tagged for deletion
+        frappe.after_ajax(() => {
+            const items = frm.doc.items.filter(item => !item.__remove);
+            frm.clear_table("items");
+            items.forEach(item => frm.add_child("items", item));
+            frm.refresh_field('items');
+        });
+    },
 	delivery_warehouse(frm) {
 		if (frm.doc.delivery_warehouse && frm.doc.items && frm.doc.items.length) {
 			$.each(frm.doc.items || [], function(i, item) {
