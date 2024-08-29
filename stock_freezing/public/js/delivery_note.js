@@ -1,6 +1,7 @@
 frappe.ui.form.on('Delivery Note',{
     onload_post_render: function(frm) {
         // Iterate over each item in the Delivery Note
+		if(frm.doc.is_local){
         $.each(frm.doc.items, function(k, val) {
             if (val.reserved_quantity > 0 && val.reserved_quantity <= val.qty) {
                 frappe.db.get_list('Frozen Stock', {
@@ -52,7 +53,7 @@ frappe.ui.form.on('Delivery Note',{
                 });
             }
         });
-
+	
         // Remove items tagged for deletion
         setTimeout(() => {
 	        frappe.after_ajax(() => {
@@ -63,7 +64,8 @@ frappe.ui.form.on('Delivery Note',{
 	            frm.refresh_field('items');
 	        });
 	    },150)
-    },
+    }
+	},
 	delivery_warehouse(frm) {
 		if (frm.doc.delivery_warehouse && frm.doc.items && frm.doc.items.length) {
 			$.each(frm.doc.items || [], function(i, item) {
