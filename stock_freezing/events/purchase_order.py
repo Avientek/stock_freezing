@@ -31,6 +31,9 @@ def get_sales_orders(source_name, target_doc=None, args=None):
 					"contact_person",
 					"taxes_and_charges",
 					"tax_category",
+					"tc_name",
+					"terms",
+					"payment_terms_template",
 				],
 			},
 			"Sales Order Item": {
